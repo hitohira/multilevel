@@ -5,20 +5,38 @@
 #include "load.h"
 
 //const char* filename = "../centrality/matrix/bcsstk17/bcsstk17.mtx";
-//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G3_circuit.mtx";
+const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G3_circuit.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef2/crystm02/crystm02.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ecology2/ecology2.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef/bundle1/bundle1.mtx";
-const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef2/parabolic_fem/parabolic_fem.mtx";
+//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef2/parabolic_fem/parabolic_fem.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef2/nd12k/nd12k.mtx";
+
+const double ratioX = 0.5;
 
 int rec(PartGraph* pg,int* match,int* map){
 	fprintf(stderr,"%d\t%d\n",pg->Vsize(), pg->Esize());
 	if(pg->Vsize() < 200 || pg->Esize() < 200){
 		int* partition = (int*)malloc(pg->Vsize()*sizeof(int));
 		if(partition == NULL) fprintf(stderr,"mem X\n");
-		double ratioX = 0.3;
+		ndOptions options;
+		SetDefaultOptions(&options);
+		pg->SetTolerance(&options);
 		pg->InitPartitioning(ratioX,partition);
+		/*
+		FMDATA fm(pg,partition);
+		int currWgtX = 0;
+		int totalWgt = 0;
+		for(int i = 0; i < pg->Vsize(); i++){
+			if(partition[i] == 0) currWgtX += pg->Vwgt(i);
+			totalWgt += pg->Vwgt(i);
+		}
+		int minWgtX = totalWgt*ratioX - pg->Tolerance();
+		int maxWgtX = totalWgt*ratioX + pg->Tolerance();
+		fprintf(stderr,"start refine %d %d %d\n",currWgtX,minWgtX,maxWgtX);
+		currWgtX = fm.RefineEdge(currWgtX,minWgtX,maxWgtX,pg,partition);
+		fprintf(stderr,"edge cut %d -> %d\n",old_ecut,fm.Edgecut());
+		*/
 		pg->Show(partition);
 		free(partition);
 		return 0;
@@ -66,14 +84,21 @@ int main(){
 	int* partition = (int*)malloc((nvtxs)*sizeof(int));
 
 	PartGraph pg(gd.nvtxs,gd.xadj,gd.adjncy,gd.vwgt,gd.ewgt,gd.cewgt,gd.adjwgt);
-	rec(&pg,match,map);
-	return 0;
 
-	double ratioX = 0.5;
+//	rec(&pg,match,map);
+//	return 0;
+
 	ndOptions options;
 	SetDefaultOptions(&options);
 
 	pg.Partition2(&options,ratioX,partition);
+
+	fprintf(stderr,"edgecut %d\n",pg.GetEdgecut(partition));
+	int wgtx = 0;
+	for(int i = 0; i < nvtxs; i++){
+		if(partition[i] == 0) wgtx += pg.Vwgt(i);
+	}
+	fprintf(stderr,"wgtX %d\n",wgtx);
 //	pg.Show(partition);
 	// TODO uncomment
 	

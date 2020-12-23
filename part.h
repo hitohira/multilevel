@@ -26,6 +26,9 @@ private:
 	int* adjwgt; // the sum of wgt of the edges adjcent to v,  size = nvtxs
 
 	int tolerance;
+	int totalvwgt;
+	int currWgtX;
+	int edgecut;
 public:
 	PartGraph(){
 		nvtxs = nedges = 0;
@@ -36,7 +39,10 @@ public:
 		cewgt = NULL;
 		adjwgt = NULL;
 
-		tolerance = INT_MAX;
+		tolerance = 0;
+		totalvwgt = 0;
+		currWgtX = 0;
+		edgecut = 0;
 	};
 	PartGraph(int nvtxs,int* xadj,int* adjncy,int* vwgt,int* ewgt,int* cewgt,int* adjwgt){
 		this->nvtxs = nvtxs;
@@ -48,7 +54,11 @@ public:
 		this->adjwgt = adjwgt;
 		nedges = xadj[nvtxs];
 
-		tolerance = INT_MAX;
+		tolerance = 0;
+		totalvwgt = 0;
+		for(int i = 0; i < nvtxs; i++) totalvwgt += vwgt[i];
+		currWgtX = 0;
+		edgecut = 0;
 	};
 	~PartGraph(){ };
 	void DeleteGraph(){
@@ -65,7 +75,22 @@ public:
 	int Esize(){
 		return nedges;
 	}
-	int MaxEdgeGain();
+	int Vwgt(int v){
+		return vwgt[v];
+	}
+	int Ewgt(int i){
+		return ewgt[i];
+	}
+	int Xadj(int v){
+		return xadj[v];
+	}
+	int Adjncy(int i){
+		return adjncy[i];
+	}
+	int Tolerance(){
+		return tolerance;
+	}
+	int UpperEdgeGain();
 	int MaxVertexWeight();
 	void SetTolerance(ndOptions* options);
 
@@ -89,7 +114,8 @@ public:
 	int GGGPartitioningEdge(double ratioX, int* partition); // Greedy Graph Growing Algorithm
 	int GetLargeGainVertexFromBoundary(std::vector<int> &list,int* partition,int val);
 
-	int Uncoarsening(int* map,int* coarserPart,int* partition);
+	int Uncoarsening(double ratioX, int* map,int* coarserPart,int* partition);
+	int RefineEdge(double ratioX, int* partition);
 };
 
 #endif

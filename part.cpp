@@ -9,6 +9,7 @@
 #include <list>
 #include <iterator>
 #include <algorithm>
+#include <assert.h>
 
 /*
 typedef struct{
@@ -27,7 +28,7 @@ private:
 }
 */
 void SetDefaultOptions(ndOptions* options){
-	options->ufactor = 50; // 5%
+	options->ufactor = 5; // 0.5% + 0.5% = 1%
 	options->coarsenThreshold = 200;
 }
 
@@ -157,6 +158,9 @@ int PartGraph::GenerateCoarserGraph(int newSize, const int* match, const int* ma
 	newGraph->cewgt = (int*)malloc(newSize*sizeof(int));
 	newGraph->adjwgt = (int*)malloc(newSize*sizeof(int));
 
+	newGraph->totalvwgt = totalvwgt;
+	newGraph->tolerance = tolerance;
+
 	int* tAdjncy = (int*)malloc(nedges*sizeof(int));
 	int* tEwgt = (int*)malloc(nedges*sizeof(int));
 
@@ -254,7 +258,7 @@ int PartGraph::GGPartitioningEdge(double ratioX, int* partition){
 		ratio = 1 - ratioX;
 		val = 1;
 	}
-	int nP = (int)(nvtxs*ratio);
+	int nP = (int)(totalvwgt*ratio);
 
 	int* part = (int*)malloc(nvtxs*sizeof(int));
 	int bestScore = INT_MAX;
@@ -275,7 +279,7 @@ int PartGraph::GGPartitioningEdge(double ratioX, int* partition){
 				int v = que.front(); que.pop();
 				if(part[v] == 1-val){
 					part[v] = val;
-					counter++;
+					counter+= vwgt[v];
 				}
 				for(int j = xadj[v]; j < xadj[v+1]; j++){
 					int u = adjncy[j];
@@ -285,15 +289,21 @@ int PartGraph::GGPartitioningEdge(double ratioX, int* partition){
 				}
 			}
 		}
-		int newScore = GetEdgecut(part);	
-		fprintf(stderr,"%d\n",newScore);
+		RefineEdge(ratioX,part);
+		int newScore = GetEdgecut(part);
+//		fprintf(stderr,"%d\n",newScore);
 		if(bestScore > newScore){
 			ICopy(nvtxs,part,partition);
 			bestScore = newScore;
 		}
 	}
 	free(part);
-	return nP;
+	edgecut = bestScore;
+	currWgtX = 0;
+	for(int i = 0; i < nvtxs; i++){
+		if(partition[i] == 0) currWgtX += vwgt[i];
+	}
+	return bestScore;
 }
 
 int PartGraph::GetLargeGainVertexFromBoundary(std::vector<int> &list,int* partition,int val){
@@ -349,7 +359,7 @@ int PartGraph::GGGPartitioningEdge(double ratioX, int* partition){
 		ratio = 1 - ratioX;
 		val = 1;
 	}
-	int nP = (int)(nvtxs*ratio);
+	int nP = (int)(totalvwgt*ratio);
 
 	int* part = (int*)malloc(nvtxs*sizeof(int));
 	int bestScore = INT_MAX;
@@ -359,52 +369,25 @@ int PartGraph::GGGPartitioningEdge(double ratioX, int* partition){
 		std::vector<int> list;
 		int counter = 0;
 		while(counter < nP){
-			GetLargeGainVertexFromBoundary(list,part,val);
-			counter++;
+			int v = GetLargeGainVertexFromBoundary(list,part,val);
+			counter+= vwgt[v];
 		}
+		RefineEdge(ratioX,part);
 		int newScore = GetEdgecut(part);
-		fprintf(stderr,"%d\n",newScore);
+//		fprintf(stderr,"%d\n",newScore);
 		if(bestScore > newScore){
 			ICopy(nvtxs,part,partition);
 			bestScore = newScore;
 		}
 	}
 	free(part);
-	return nP;
-}
-
-/////////////////
-// main functions
-/////////////////
-
-int PartGraph::Partition2(ndOptions* options, double ratioX, int* partition){
- // partition[nvtxs] // 0->X, 1->Y, 2->S
-//	double ratioY = 1 - ratioX;
-
-	int* match = (int*)malloc(nvtxs*sizeof(int));
-	int* map = (int*)malloc(nvtxs*sizeof(int));
-
-	if(nvtxs <= options->coarsenThreshold){
-		InitPartitioning(ratioX,partition);
+	edgecut = bestScore;
+	currWgtX = 0;
+	for(int i = 0; i < nvtxs; i++){
+		if(partition[i] == 0) currWgtX += vwgt[i];
 	}
-	else{
-		int newSize = Coarsening(match,map);
-		fprintf(stderr,"size = %d\n",newSize);
 
-		int* coarserPart = (int*)malloc(newSize*sizeof(int));
-		PartGraph newGraph;
-		GenerateCoarserGraph(newSize,match,map,&newGraph);
-		newGraph.Partition2(options,ratioX,coarserPart);		
-		
-		Uncoarsening(map,coarserPart,partition);
-
-		newGraph.DeleteGraph();
-		free(coarserPart);
-	}
-		
-	free(map);
-	free(match);
-	return 0;
+	return bestScore;
 }
 
 int PartGraph::GetEdgeGain(int v,int* partition){
@@ -416,7 +399,7 @@ int PartGraph::GetEdgeGain(int v,int* partition){
 			g -= ewgt[i];
 		}
 		else{
-			g+= ewgt[i];
+			g += ewgt[i];
 		}
 	}
 	return g;
@@ -436,6 +419,64 @@ int PartGraph::GetEdgecut(int* partition){
 	return score / 2;
 }
 
+int PartGraph::RefineEdge(double ratioX, int* partition){
+	FMDATA fm(this,partition);
+	int totalWgt = totalvwgt;
+	int minWgtX = (int)(totalWgt*ratioX - tolerance);
+	int maxWgtX = (int)(totalWgt*ratioX + tolerance);
+	currWgtX = fm.RefineEdge(currWgtX,minWgtX,maxWgtX,this,partition);
+	fm.PrintSt();
+	edgecut = fm.Edgecut();
+	return edgecut;
+}
+
+/////////////////
+// main functions
+/////////////////
+
+int PartGraph::Partition2(ndOptions* options, double ratioX, int* partition){
+ // partition[nvtxs] // 0->X, 1->Y, 2->S
+//	double ratioY = 1 - ratioX;
+	SetTolerance(options);
+
+	int* match = (int*)malloc(nvtxs*sizeof(int));
+	int* map = (int*)malloc(nvtxs*sizeof(int));
+
+	if(nvtxs <= options->coarsenThreshold || Esize() == 0){
+		InitPartitioning(ratioX,partition);
+	}
+	else{
+		int newSize = Coarsening(match,map);
+		fprintf(stderr,"size = %d\n",newSize);
+
+		int* coarserPart = (int*)malloc(newSize*sizeof(int));
+		PartGraph newGraph;
+		GenerateCoarserGraph(newSize,match,map,&newGraph);
+		newGraph.Partition2(options,ratioX,coarserPart);		
+	
+		
+		currWgtX = newGraph.currWgtX;
+		edgecut = newGraph.edgecut;
+		Uncoarsening(ratioX,map,coarserPart,partition);
+
+		newGraph.DeleteGraph();
+		free(coarserPart);
+	}
+		
+	free(map);
+	free(match);
+	fprintf(stderr,"Xwgt %d (%f), Ecut %d (size %d)\n",currWgtX,1.0*currWgtX/totalvwgt,edgecut,nvtxs);
+
+		int dbg = 0;
+		for(int i = 0; i < nvtxs; i++){
+			if(partition[i] == 0) dbg += vwgt[i];
+		}
+		fprintf(stderr,"wgtx true: %d\n",dbg);
+
+	return 0; 
+}
+
+
 int PartGraph::Coarsening(int* match,int* map){
 	// matching and map
 //	RandomMatching(match);
@@ -445,19 +486,20 @@ int PartGraph::Coarsening(int* match,int* map){
 	return newSize;
 }
 
-int PartGraph::Uncoarsening(int* map,int* coarserPart,int* partition){
+int PartGraph::Uncoarsening(double ratioX, int* map,int* coarserPart,int* partition){
 	// project
 	for(int i = 0; i < nvtxs; i++){
 		partition[i] = coarserPart[map[i]];
 	}
 
 	// refinement
-	//TODO
+	int new_ecut = RefineEdge(ratioX,partition);
+	assert(edgecut == GetEdgecut(partition));
 
-	return 0;
+	return new_ecut;
 }
 
-int PartGraph::MaxEdgeGain(){
+int PartGraph::UpperEdgeGain(){
 	int ret = INT_MIN;
 	for(int i = 0; i < nvtxs; i++){
 		int g = 0;
@@ -483,7 +525,9 @@ void PartGraph::SetTolerance(ndOptions* options){
 		 if(vwgt[i] > mxw) mxw = vwgt[i];
 	}
 	tolerance = (int)(smw / 1000.0 * options->ufactor);
-	if(tolerance < mxw) tolerance = mxw;
+	if(tolerance < mxw){
+		 tolerance = mxw;
+	}
 }
 
 void PartGraph::Show(){
@@ -510,6 +554,6 @@ void PartGraph::Show(int* partition){
 }
 
 int PartGraph::InitPartitioning(double ratioX, int* partition){
-//	return GGPartitioningEdge(ratioX,partition);
-	return GGGPartitioningEdge(ratioX,partition);
+	return GGPartitioningEdge(ratioX,partition);
+//	return GGGPartitioningEdge(ratioX,partition);
 }
