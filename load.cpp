@@ -80,8 +80,8 @@ void SparseMatrix::Get(GraphData* gd){
 	gd->nvtxs = m;
 
 	for(int i = 0; i < m; i++){
-//		gd->vwgt[i] = xadj[i+1] - xadj[i] + 1;
-		gd->vwgt[i] = 1;
+		gd->vwgt[i] = rowptr[i+1] - rowptr[i] + 1;
+//		gd->vwgt[i] = 1;
 		gd->cewgt[i] = 0;
 		gd->xadj[i] = rowptr[i];
 	}

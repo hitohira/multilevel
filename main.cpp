@@ -5,14 +5,17 @@
 #include "load.h"
 
 //const char* filename = "../centrality/matrix/bcsstk17/bcsstk17.mtx";
-const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G3_circuit.mtx";
+//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G3_circuit.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef2/crystm02/crystm02.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ecology2/ecology2.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef/bundle1/bundle1.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef2/parabolic_fem/parabolic_fem.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef2/nd12k/nd12k.mtx";
+//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef2/crankseg_1/crankseg_1.mtx";
+//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/superlu/ldoor/ldoor.mtx";
+//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/superlu/Serena/Serena.mtx";
 
-const double ratioX = 0.5;
+const double ratioX = 0.2;
 
 int rec(PartGraph* pg,int* match,int* map){
 	fprintf(stderr,"%d\t%d\n",pg->Vsize(), pg->Esize());
@@ -52,6 +55,7 @@ int rec(PartGraph* pg,int* match,int* map){
 int main(){
 	srand((unsigned)time(NULL));
 	SparseMatrix csr(filename);	
+	fprintf(stderr,"%s\n",filename);
 //	csr.Dump();
 	csr.RemoveDiagonal();
 //	csr.Dump();
@@ -100,7 +104,17 @@ int main(){
 	}
 	fprintf(stderr,"wgtX %d\n",wgtx);
 //	pg.Show(partition);
-	// TODO uncomment
+	
+	int boundary = 0;
+	for(int i = 0; i < nvtxs; i++){
+		for(int j = gd.xadj[i]; j < gd.xadj[i+1]; j++){
+			if(partition[i] != partition[gd.adjncy[j]]){
+				boundary++;
+				break;
+			}
+		}
+	}
+	printf("boundary %d (%f)\n",boundary,1.0*boundary/nvtxs);
 	
 	free(partition);
 

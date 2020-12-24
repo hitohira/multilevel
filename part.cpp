@@ -303,6 +303,7 @@ int PartGraph::GGPartitioningEdge(double ratioX, int* partition){
 	for(int i = 0; i < nvtxs; i++){
 		if(partition[i] == 0) currWgtX += vwgt[i];
 	}
+	fprintf(stderr,"wgt %d (%f)\n",currWgtX,1.0*currWgtX/totalvwgt);
 	return bestScore;
 }
 
@@ -386,7 +387,7 @@ int PartGraph::GGGPartitioningEdge(double ratioX, int* partition){
 	for(int i = 0; i < nvtxs; i++){
 		if(partition[i] == 0) currWgtX += vwgt[i];
 	}
-
+	fprintf(stderr,"wgt %d (%f)\n",currWgtX,1.0*currWgtX/totalvwgt);
 	return bestScore;
 }
 
@@ -466,13 +467,13 @@ int PartGraph::Partition2(ndOptions* options, double ratioX, int* partition){
 	free(map);
 	free(match);
 	fprintf(stderr,"Xwgt %d (%f), Ecut %d (size %d)\n",currWgtX,1.0*currWgtX/totalvwgt,edgecut,nvtxs);
-
+/*
 		int dbg = 0;
 		for(int i = 0; i < nvtxs; i++){
 			if(partition[i] == 0) dbg += vwgt[i];
 		}
 		fprintf(stderr,"wgtx true: %d\n",dbg);
-
+*/
 	return 0; 
 }
 
@@ -525,9 +526,9 @@ void PartGraph::SetTolerance(ndOptions* options){
 		 if(vwgt[i] > mxw) mxw = vwgt[i];
 	}
 	tolerance = (int)(smw / 1000.0 * options->ufactor);
-	if(tolerance < mxw){
-		 tolerance = mxw;
-	}
+//	if(tolerance < mxw){
+//		 tolerance = mxw;
+//	}
 }
 
 void PartGraph::Show(){
@@ -554,6 +555,6 @@ void PartGraph::Show(int* partition){
 }
 
 int PartGraph::InitPartitioning(double ratioX, int* partition){
-	return GGPartitioningEdge(ratioX,partition);
-//	return GGGPartitioningEdge(ratioX,partition);
+//	return GGPartitioningEdge(ratioX,partition);
+	return GGGPartitioningEdge(ratioX,partition);
 }
