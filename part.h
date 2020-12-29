@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <vector>
+#include <map>
 
 #include "FM.h"
 
@@ -22,8 +23,8 @@ private:
 	int* adjncy; // edge, size = xadj[nvtxs]
 	int* vwgt; // size = nvtxs
 	int* ewgt; // size = xadj[nvtxs]
-	int* cewgt; // the wgt of edges that have been contacted to create v, size = nvtxs
-	int* adjwgt; // the sum of wgt of the edges adjcent to v,  size = nvtxs
+	int* cewgt; // not used // the wgt of edges that have been contacted to create v, size = nvtxs
+	int* adjwgt; // not used // the sum of wgt of the edges adjcent to v,  size = nvtxs
 
 	int tolerance;
 	int totalvwgt;
@@ -97,11 +98,21 @@ public:
 	void Show();
 	void Show(int* partition);
 
+	// partition[nvtxs] // 0->X, 1->Y // ratioY = 1.0 - ratioX
 	int Partition2(ndOptions* options, double ratioX, int* partition); 
+
 	// partition[nvtxs] // 0->X, 1->Y, 2->S // ratioY = 1.0 - ratioX
+	int Partition3(ndOptions* options, double ratioX, int* partition);
+
+	int VertSepFromEdgeSep(int* partition);
+	int GetBoundary(std::vector<int>& bvs,std::map<int,int>& ibvs,int* partition);
+	bool VertSepIsOK(int* partition);
 
 	int GetEdgeGain(int v, int* partition);
 	int GetEdgecut(int* partition);
+
+	int GetVertGain(int v, int to, int* partition); // gain when separator vertex "v" is moved to partition "to"
+	int GetVertSepSize(int* partition);
 
 	int Coarsening(int* match, int* map); // map[nvtxs], match[nvtxs], ret val = nvtxs of coarser graph
 	int RandomMatching(int* match);
@@ -109,13 +120,18 @@ public:
 	int Mapping(const int* match, int* map); // ret val = nvtxs of coarser graph
 	int GenerateCoarserGraph(int newSize, const int* match, const int* map, PartGraph* newGraph);
 	
-	int InitPartitioning(double ratioX, int* partition); // divide G to X=0 and Y=1. ret val = |Y|
+	int InitPartitioningEdge(double ratioX, int* partition); // divide G to X=0 and Y=1. ret val = |Y|
 	int GGPartitioningEdge(double ratioX, int* partition); // Graph Growing Algorithm
 	int GGGPartitioningEdge(double ratioX, int* partition); // Greedy Graph Growing Algorithm
 	int GetLargeGainVertexFromBoundary(std::vector<int> &list,int* partition,int val);
 
-	int Uncoarsening(double ratioX, int* map,int* coarserPart,int* partition);
+	int InitPartitioningVert(double ratioX, int* partition);
+
+	int UncoarseningEdge(double ratioX, int* map,int* coarserPart,int* partition);
 	int RefineEdge(double ratioX, int* partition);
+
+	int UncoarseningVert(double ratioX, int* map, int* coarserPart, int* partition);
+	int RefineVert(double ratioX, int* partition);
 };
 
 #endif

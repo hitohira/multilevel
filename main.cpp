@@ -5,7 +5,7 @@
 #include "load.h"
 
 //const char* filename = "../centrality/matrix/bcsstk17/bcsstk17.mtx";
-//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G3_circuit.mtx";
+const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G3_circuit.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef2/crystm02/crystm02.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ecology2/ecology2.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef/bundle1/bundle1.mtx";
@@ -15,7 +15,7 @@
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/superlu/ldoor/ldoor.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/superlu/Serena/Serena.mtx";
 
-const double ratioX = 0.2;
+const double ratioX = 0.5;
 
 int rec(PartGraph* pg,int* match,int* map){
 	fprintf(stderr,"%d\t%d\n",pg->Vsize(), pg->Esize());
@@ -25,7 +25,7 @@ int rec(PartGraph* pg,int* match,int* map){
 		ndOptions options;
 		SetDefaultOptions(&options);
 		pg->SetTolerance(&options);
-		pg->InitPartitioning(ratioX,partition);
+		pg->InitPartitioningEdge(ratioX,partition);
 		/*
 		FMDATA fm(pg,partition);
 		int currWgtX = 0;
@@ -110,11 +110,18 @@ int main(){
 		for(int j = gd.xadj[i]; j < gd.xadj[i+1]; j++){
 			if(partition[i] != partition[gd.adjncy[j]]){
 				boundary++;
+//				printf("%d %d %d\n",boundary,partition[i],partition[gd.adjncy[j]]);
 				break;
 			}
 		}
 	}
 	printf("boundary %d (%f)\n",boundary,1.0*boundary/nvtxs);
+
+	int mvc = pg.VertSepFromEdgeSep(partition);
+	if(pg.VertSepIsOK(partition)){
+		printf("vertex sep size: %d\n",mvc);
+	}
+	else printf("vert sep is wrong\n");
 	
 	free(partition);
 
