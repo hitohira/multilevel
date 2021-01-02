@@ -160,8 +160,21 @@ void FMDATA::PrintSt(){
 	fprintf(stderr,"FMDATA status\ncreate: %f\npop: %f\nupdate: %f\nbacktrack: %f\noption: %f\n",st_create,st_pop,st_update,st_backtrack,st_option);
 #endif
 }
-static bool ConditionWgt(int newWgtX,int minWgtX, int maxWgtX, int part){
-	return (minWgtX <= newWgtX && newWgtX <= maxWgtX);
+static bool ConditionWgt(int newWgtX,int minWgtX, int maxWgtX,int oldWgtX, int part){
+	return (minWgtX <= newWgtX && newWgtX <= maxWgtX) ||
+	(newWgtX < minWgtX && oldWgtX < minWgtX && newWgtX > oldWgtX) ||
+	(newWgtX > maxWgtX && oldWgtX > maxWgtX && newWgtX < oldWgtX);
+/*
+	static int tms = 0;
+	tms++;
+	if(minWgtX <= newWgtX && newWgtX <= maxWgtX) return true;
+	if(newWgtX < minWgtX && oldWgtX < minWgtX && newWgtX > oldWgtX){
+		if(tms < 20) printf("%d %d %d\n",oldWgtX,newWgtX,minWgtX);
+		return false;
+	}
+	if(newWgtX > maxWgtX && oldWgtX > maxWgtX && newWgtX < oldWgtX) return true;
+	return false;
+*/
 }
 VGPair FMDATA::PopMovedVertexEdge(int currWgtX, int minWgtX,int maxWgtX, PartGraph* pg){
 	int lgb = max_gain[0] > max_gain[1] ? 0 : 1;
@@ -175,7 +188,7 @@ VGPair FMDATA::PopMovedVertexEdge(int currWgtX, int minWgtX,int maxWgtX, PartGra
 				int v = ptr->item;
 				int w = pg->Vwgt(v);
 				int newWgtX = lgb == 0 ? currWgtX - w : currWgtX + w;
-				if(ConditionWgt(newWgtX,minWgtX,maxWgtX,lgb)){
+				if(ConditionWgt(newWgtX,minWgtX,maxWgtX,currWgtX,lgb)){
 					bucket[lgb][idx].Erase(ptr);
 					cell[v] = NULL;
 					free_cell.push_back(v);
@@ -203,7 +216,7 @@ VGPair FMDATA::PopMovedVertexEdge(int currWgtX, int minWgtX,int maxWgtX, PartGra
 				int v = fi->item;
 				int w = pg->Vwgt(v);
 				int newWgtX = fib == 0 ? currWgtX - w : currWgtX + w;
-				if(ConditionWgt(newWgtX,minWgtX,maxWgtX,fib)){
+				if(ConditionWgt(newWgtX,minWgtX,maxWgtX,currWgtX,fib)){
 					bucket[fib][idx].Erase(fi);
 					cell[v] = NULL;
 					free_cell.push_back(v);
@@ -217,7 +230,7 @@ VGPair FMDATA::PopMovedVertexEdge(int currWgtX, int minWgtX,int maxWgtX, PartGra
 				int v = se->item;
 				int w = pg->Vwgt(v);
 				int newWgtX = seb == 0 ? currWgtX - w : currWgtX + w;
-				if(ConditionWgt(newWgtX,minWgtX,maxWgtX,seb)){
+				if(ConditionWgt(newWgtX,minWgtX,maxWgtX,currWgtX,seb)){
 					bucket[seb][idx].Erase(se);
 					cell[v] = NULL;
 					free_cell.push_back(v);
@@ -342,6 +355,7 @@ int FMDATA::RefineEdgeInner(int currWgtX,int minWgtX, int maxWgtX, PartGraph* pg
 		if(vg.v == -1) break;
 //		fprintf(stderr," update\n");
 		currWgtX = UpdatePartEdgecutAndGainEdge(vg,currWgtX,pg,partition);
+//		fprintf(stderr,"%d %d %d\n",currWgtX, pg->GetCurrWgt(partition), pg->GetEdgecut(partition));
 		double t3 = GetTime();
 		st_update += t3-t2;
 	}

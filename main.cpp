@@ -53,7 +53,9 @@ int rec(PartGraph* pg,int* match,int* map){
 }
 
 int main(){
-	srand((unsigned)time(NULL));
+	unsigned seed = (unsigned)time(NULL);
+	srand(seed);
+	fprintf(stderr,"seed %u\n",seed);
 	SparseMatrix csr(filename);	
 	fprintf(stderr,"%s\n",filename);
 //	csr.Dump();

@@ -104,6 +104,8 @@ public:
 	// partition[nvtxs] // 0->X, 1->Y, 2->S // ratioY = 1.0 - ratioX
 	int Partition3(ndOptions* options, double ratioX, int* partition);
 
+	int GetCurrWgt(int* partition);
+
 	int VertSepFromEdgeSep(int* partition);
 	int GetBoundary(std::vector<int>& bvs,std::map<int,int>& ibvs,int* partition);
 	bool VertSepIsOK(int* partition);

@@ -291,6 +291,7 @@ int PartGraph::GGPartitioningEdge(double ratioX, int* partition){
 				}
 			}
 		}
+		currWgtX = GetCurrWgt(part);
 		RefineEdge(ratioX,part);
 		int newScore = GetEdgecut(part);
 //		fprintf(stderr,"%d\n",newScore);
@@ -375,7 +376,16 @@ int PartGraph::GGGPartitioningEdge(double ratioX, int* partition){
 			int v = GetLargeGainVertexFromBoundary(list,part,val);
 			counter+= vwgt[v];
 		}
+		int tmp2 = 0;
+		for(int k = 0; k < nvtxs; k++){
+			if(part[k] == 0) tmp2 += vwgt[k];
+		}
+		currWgtX = GetCurrWgt(part);
 		RefineEdge(ratioX,part);
+		int tmp = 0;
+		for(int k = 0; k < nvtxs; k++){
+			if(part[k] == 0) tmp += vwgt[k];
+		}
 		int newScore = GetEdgecut(part);
 //		fprintf(stderr,"%d\n",newScore);
 		if(bestScore > newScore){
@@ -698,6 +708,17 @@ void PartGraph::Show(){
 		}
 	}
 }
+
+int PartGraph::GetCurrWgt(int* partition){
+	int ret = 0;
+	for(int i = 0; i < nvtxs; i++){
+		if(partition[i] == 0){
+			ret += vwgt[i];
+		}
+	}
+	return ret;
+}
+
 void PartGraph::Show(int* partition){
 	printf("%d %d\n",nvtxs,nedges);
 	for(int i = 0; i < nvtxs; i++){
