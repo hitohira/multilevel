@@ -137,6 +137,33 @@ int PartGraph::HeavyEdgeMatching(int* match){
 	finMatch(grpv,lrpv);
 	return 0;
 }
+int PartGraph::LiteEdgeMatching(int* match){
+	int* grpv, * lrpv;
+	InitMatch(nvtxs,match,&grpv,&lrpv);
+	
+	for(int i = 0; i < nvtxs; i++){
+		int vidx = grpv[i];
+		if(match[vidx] == vidx){ // not matched yet
+			int mnwgt = INT_MAX;
+			int mnidx = -1;
+			for(int j = xadj[vidx]; j < xadj[vidx+1]; j++){
+				int eidx = adjncy[j];
+				if(ewgt[j] < mnwgt && match[eidx] == eidx){
+					mnwgt = ewgt[j];
+					mnidx = eidx;
+				}
+			}
+			if(mnidx != -1){
+				match[vidx] = mnidx;
+				match[mnidx] = vidx;
+			}
+		}
+	}
+
+	finMatch(grpv,lrpv);
+	return 0;
+}
+
 
 // if i < j -> map[i] <= map[j]
 int PartGraph::Mapping(const int* match, int* map){
@@ -221,7 +248,8 @@ int PartGraph::GenerateCoarserGraph(int newSize, const int* match, const int* ma
 				}
 				newGraph->xadj[map[i]]   = ecount;
 				newGraph->vwgt[map[i]]   = vwgt[i] + vwgt[match[i]];
-				newGraph->cewgt[map[i]]  = cewgt[i] + cewgt[match[i]] + wv1v2;
+			//	newGraph->cewgt[map[i]]  = cewgt[i] + cewgt[match[i]] + wv1v2;
+				newGraph->cewgt[map[i]]  = cewgt[i] + cewgt[match[i]];
 				newGraph->adjwgt[map[i]] = adjwgt[i] + adjwgt[match[i]] - 2*wv1v2;
 			}
 			// tAdjncy, tEwgt, ecount++
@@ -444,11 +472,32 @@ int PartGraph::GetVertGain(int v,int to, int* partition){
 	}
 	return g;
 }
+int PartGraph::GetVertGainCewgt(int v,int to, int* partition){
+	// partition[v] == 2
+	// to = 0 or 1
+	int g = cewgt[v];
+	for(int i = xadj[v]; i < xadj[v+1]; i++){
+		int u = adjncy[i];
+		if(partition[u] == (1-to)){
+			g -= cewgt[u];
+		}
+	}
+	return g;
+}
 int PartGraph::GetVertSepSize(int* partition){
 	int ret = 0;
 	for(int i = 0; i < nvtxs; i++){
 		if(partition[i] == 2){
 			ret += vwgt[i];
+		}
+	}
+	return ret;
+}
+int PartGraph::GetVertSepSizeCewgt(int* partition){
+	int ret = 0;
+	for(int i = 0; i < nvtxs; i++){
+		if(partition[i] == 2){
+			ret += cewgt[i];
 		}
 	}
 	return ret;
@@ -466,9 +515,13 @@ int PartGraph::RefineEdge(double ratioX, int* partition){
 	return edgecut;
 }
 
-int PartGraph::RefineVert(double ratioX, int* partition){
-	// TODO
-	return 0;
+int PartGraph::RefineVert(int* partition){
+	FMDATAvert fm(this,partition);
+//	FMDATAvert2 fm(this,partition);
+//	SetWgtInfo(this,partition,ratioX,tolerance,&wgtInfo);
+	int vert_sep_size = fm.RefineVert(&wgtInfo,this,partition);
+	fm.PrintSt();
+	return vert_sep_size;
 }
 
 bool PartGraph::VertSepIsOK(int* partition){
@@ -605,19 +658,23 @@ int PartGraph::Partition3(ndOptions* options, double ratioX, int* partition){
 
 	if(nvtxs <= options->coarsenThreshold || Esize() == 0){
 		InitPartitioningVert(ratioX,partition);
+		SetWgtInfo(this,partition,ratioX,tolerance,&wgtInfo);
 	}
 	else{
-		int newSize = Coarsening(match,map);
+		RandomMatching(match);
+	// 	HeavyEdgeMatching(match);
+	 //	LiteEdgeMatching(match);
+
+		int newSize = Mapping(match,map);
 		fprintf(stderr,"size = %d\n",newSize);
 
 		int* coarserPart = (int*)malloc(newSize*sizeof(int));
 		PartGraph newGraph;
 		GenerateCoarserGraph(newSize,match,map,&newGraph);
-		newGraph.Partition2(options,ratioX,coarserPart);		
+		newGraph.Partition3(options,ratioX,coarserPart);		
 	
-		
-		currWgtX = newGraph.currWgtX;
-		edgecut = newGraph.edgecut;
+		wgtInfo = newGraph.wgtInfo;
+		wgtInfo.tol = 1.0*tolerance / totalvwgt;
 		UncoarseningVert(ratioX,map,coarserPart,partition);
 
 		newGraph.DeleteGraph();
@@ -626,7 +683,7 @@ int PartGraph::Partition3(ndOptions* options, double ratioX, int* partition){
 		
 	free(map);
 	free(match);
-	fprintf(stderr,"Xwgt %d (%f), Ecut %d (size %d)\n",currWgtX,1.0*currWgtX/totalvwgt,edgecut,nvtxs);
+	fprintf(stderr,"Xwgt %d (%f), Ssize %d (%f) (size %d)\n",wgtInfo.wgt[0],1.0*wgtInfo.wgt[0]/totalvwgt,wgtInfo.wgt[2],1.0*wgtInfo.wgt[2]/totalvwgt,nvtxs);
 	return 0; 
 }
 
@@ -660,8 +717,8 @@ int PartGraph::UncoarseningVert(double ratioX, int* map,int* coarserPart,int* pa
 	}
 
 	// refinement
-	int vert_sep_size = RefineVert(ratioX,partition);
-	assert(vert_sep_size == GetVertSepSize(partition));
+	int vert_sep_size = RefineVert(partition);
+//	assert(vert_sep_size == GetVertSepSize(partition));
 
 	return vert_sep_size;
 }
@@ -672,6 +729,30 @@ int PartGraph::UpperEdgeGain(){
 		int g = 0;
 		for(int j = xadj[i]; j < xadj[i+1]; j++){
 			g += ewgt[j];
+		}
+		if(g > ret) ret = g;
+	}
+	return ret;
+}
+int PartGraph::UpperVertGain(){
+	int ret = INT_MIN;
+	for(int i = 0; i < nvtxs; i++){
+		int g = 0;
+		for(int j = xadj[i]; j < xadj[i+1]; j++){
+			int u = adjncy[j];
+			g += vwgt[u];
+		}
+		if(g > ret) ret = g;
+	}
+	return ret;
+}
+int PartGraph::UpperVertGainCewgt(){
+	int ret = INT_MIN;
+	for(int i = 0; i < nvtxs; i++){
+		int g = 0;
+		for(int j = xadj[i]; j < xadj[i+1]; j++){
+			int u = adjncy[j];
+			g += cewgt[u];
 		}
 		if(g > ret) ret = g;
 	}
@@ -737,5 +818,13 @@ int PartGraph::InitPartitioningEdge(double ratioX, int* partition){
 }
 
 int PartGraph::InitPartitioningVert(double ratioX, int* partition){
-	return 0; // TODO
+//	InitPartitioningEdge(ratioX,partition);
+//	VertSepFromEdgeSep(partition);
+	for(int i = 0; i < nvtxs; i++) partition[i] = 2;
+
+
+	SetWgtInfo(this,partition,ratioX,tolerance,&wgtInfo);
+	int vert_sep_size = RefineVert(partition);
+//	assert(vert_sep_size == GetVertSepSize(partition));
+	return vert_sep_size;
 }

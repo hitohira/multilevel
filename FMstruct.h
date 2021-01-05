@@ -1,3 +1,7 @@
+#ifndef FMSTRUCT_H
+#define FMSTRUCT_H
+
+
 #ifndef FM_STRUCTURE_H
 #define FM_STRUCTURE_H
 
@@ -5,7 +9,6 @@
 #include <stdlib.h>
 #include <vector>
 
-#include "wgt.h"
 #include "part.h"
 class PartGraph;
 
@@ -36,11 +39,11 @@ public:
 	DoubleLinkedListItem* Begin();
 	void EraseAll();
 };
-/*
+
 typedef struct VGPair{
 	int v, gain;
 } VGPair;
-*/
+
 class FMDATA {
 private:
 	DoubleLinkedList* bucket[2];
@@ -79,7 +82,7 @@ public:
 	int IndexBucket(int gain); // -pmax <= gain <= pmax -> 0 <= ret <= 2*pmax
 	void PrintSt();
 };
-/*
+	
 typedef struct VGTri{
 	int v, to, gain;
 } VGTri;
@@ -90,7 +93,7 @@ typedef struct WgtInfo{
 	int wgt[3];
 	double ratioX,tol; // ratioX - tol < wgt[0]/(wgt[0]+wgt[1]) < ratio + tol
 } WgtInfo;
-*/
+
 void SetWgtInfo(PartGraph* pg,int* partition,double ratioX,int tolwgt, WgtInfo* wgtInfo);
 
 class FMDATAvert {
@@ -115,46 +118,6 @@ private:
 public:
 	FMDATAvert(PartGraph* pg, int* partition);
 	~FMDATAvert();
-	void Construct(PartGraph* pg, int* partition);
-	void Reconstruct(PartGraph* pg, int* partition); // reset free_cell -> reconstruct buckets
-	void ResetSt();
-	int Score(){
-		return score;
-	}
-
-	int RefineVert(WgtInfo* wgtInfo, PartGraph* pg, int* partition); // wgtInfo updated
-	int RefineVertInner(WgtInfo* wgtInfo, PartGraph* pg, int* partition);
-
-	VGTri PopMovedVertexVert(WgtInfo* wgtInfo, PartGraph* pg);
-	int UpdatePartScoreAndGainVert(VGTri vg, WgtInfo* wgtInfo, PartGraph* pg, int* partition);// wgtInfo updated
-	int BackTrackPartitionVert(WgtInfo* wgtInfo, PartGraph* pg, int* partition); //wgtinfo updated
-
-	int IndexBucket(int gain); // -pmax <= gain <= pmax -> 0 <= ret <= 2*pmax
-	void PrintSt();
-};
-	
-class FMDATAvert2 {
-private:
-	DoubleLinkedList* bucket[2];
-	DoubleLinkedListItem** cell[2];
-	int* cell_gain[2];
-	int nvtxs;
-	int pmax;
-	int max_gain[2];
-	std::vector<Trace> free_cell;
-	int end_update_idx;
-	int min_score;
-	int score;
-
-	DoubleLinkedListItem moved; // dummy item for moved vertex
-	double st_create;
-	double st_pop;
-	double st_update;
-	double st_backtrack;
-	double st_option;
-public:
-	FMDATAvert2(PartGraph* pg, int* partition);
-	~FMDATAvert2();
 	void Construct(PartGraph* pg, int* partition);
 	void Reconstruct(PartGraph* pg, int* partition); // reset free_cell -> reconstruct buckets
 	void ResetSt();

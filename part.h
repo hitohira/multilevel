@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 
+#include "wgt.h"
 #include "FM.h"
 
 typedef struct ndOptions{
@@ -23,13 +24,16 @@ private:
 	int* adjncy; // edge, size = xadj[nvtxs]
 	int* vwgt; // size = nvtxs
 	int* ewgt; // size = xadj[nvtxs]
-	int* cewgt; // not used // the wgt of edges that have been contacted to create v, size = nvtxs
+//	int* cewgt; // not used // the wgt of edges that have been contacted to create v, size = nvtxs
+	int* cewgt; // #vertices contacted to create v, size = nvtxs, load.cpp is also changed
 	int* adjwgt; // not used // the sum of wgt of the edges adjcent to v,  size = nvtxs
 
 	int tolerance;
 	int totalvwgt;
 	int currWgtX;
 	int edgecut;
+
+	WgtInfo wgtInfo;
 public:
 	PartGraph(){
 		nvtxs = nedges = 0;
@@ -92,6 +96,8 @@ public:
 		return tolerance;
 	}
 	int UpperEdgeGain();
+	int UpperVertGain();
+	int UpperVertGainCewgt();
 	int MaxVertexWeight();
 	void SetTolerance(ndOptions* options);
 
@@ -115,10 +121,13 @@ public:
 
 	int GetVertGain(int v, int to, int* partition); // gain when separator vertex "v" is moved to partition "to"
 	int GetVertSepSize(int* partition);
+	int GetVertGainCewgt(int v, int to, int* partition); 
+	int GetVertSepSizeCewgt(int* partition);
 
 	int Coarsening(int* match, int* map); // map[nvtxs], match[nvtxs], ret val = nvtxs of coarser graph
 	int RandomMatching(int* match);
 	int HeavyEdgeMatching(int* match);
+	int LiteEdgeMatching(int* match);
 	int Mapping(const int* match, int* map); // ret val = nvtxs of coarser graph
 	int GenerateCoarserGraph(int newSize, const int* match, const int* map, PartGraph* newGraph);
 	
@@ -133,7 +142,7 @@ public:
 	int RefineEdge(double ratioX, int* partition);
 
 	int UncoarseningVert(double ratioX, int* map, int* coarserPart, int* partition);
-	int RefineVert(double ratioX, int* partition);
+	int RefineVert(int* partition); // using this->wgtInfo internally
 };
 
 #endif

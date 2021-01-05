@@ -76,13 +76,18 @@ void SparseMatrix::RemoveDiagonal(){
 	val = n_val;
 }
 
-void SparseMatrix::Get(GraphData* gd){
+void SparseMatrix::Get(GraphData* gd, bool vwgt_is_deg){
 	gd->nvtxs = m;
 
 	for(int i = 0; i < m; i++){
-		gd->vwgt[i] = rowptr[i+1] - rowptr[i] + 1;
-//		gd->vwgt[i] = 1;
-		gd->cewgt[i] = 0;
+		if(vwgt_is_deg){
+			gd->vwgt[i] = rowptr[i+1] - rowptr[i] + 1;
+		}
+		else{
+			gd->vwgt[i] = 1;
+		}
+//		gd->cewgt[i] = 0;
+		gd->cewgt[i] = 1;
 		gd->xadj[i] = rowptr[i];
 	}
 	gd->xadj[m] = rowptr[m];

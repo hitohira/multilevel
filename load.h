@@ -36,7 +36,7 @@ public:
 	}
 	
 	// each memory should be alloced
-	void Get(GraphData* gd);
+	void Get(GraphData* gd,bool vwgt_is_deg);
 
 	// subroutine
 	int tCSRLoadFromMM(const char* filename);
