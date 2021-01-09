@@ -5,15 +5,20 @@
 #include "load.h"
 
 //const char* filename = "../centrality/matrix/bcsstk17/bcsstk17.mtx";
-//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G3_circuit.mtx";
+const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G3_circuit.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef2/crystm02/crystm02.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ecology2/ecology2.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef/bundle1/bundle1.mtx";
-const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef2/parabolic_fem/parabolic_fem.mtx";
+//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef2/parabolic_fem/parabolic_fem.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef2/nd12k/nd12k.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef2/crankseg_1/crankseg_1.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/superlu/ldoor/ldoor.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/superlu/Serena/Serena.mtx";
+
+//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/sym/engine/engine.mtx";
+//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/sym/F1/F1.mtx";
+//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/sym/TEM152078/TEM152078.mtx";
+
 
 const double ratioX = 0.5;
 
@@ -85,7 +90,8 @@ int main(){
 	gd.ewgt = (int*)malloc((csr.xadj()[nvtxs])*sizeof(int));
 	gd.cewgt = (int*)malloc((nvtxs)*sizeof(int));
 	gd.adjwgt = (int*)malloc((nvtxs)*sizeof(int));
-	csr.Get(&gd,true);
+	csr.Get(&gd,false);
+//	csr.Get(&gd,true);
 
 	int* match = (int*)malloc((nvtxs)*sizeof(int)); 
 	int* map = (int*)malloc((nvtxs)*sizeof(int)); 
@@ -142,3 +148,4 @@ int main(){
 	free(map);
 	return 0;
 }
+

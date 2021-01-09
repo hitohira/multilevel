@@ -49,9 +49,20 @@ void SparseMatrix::GenerateBitmap(const char* filename){
 
 void SparseMatrix::RemoveDiagonal(){
 	int nnz = rowptr[m];
+
+	int diagcntr = 0;
+	for(int i = 0; i < m; i++){
+		for(int j = rowptr[i]; j < rowptr[i+1]; j++){
+			int v = colind[j];
+			if(i == v){
+				diagcntr++;
+				break;
+			}
+		}
+	}
 	int* n_rowptr = (int*)malloc((m+1)*sizeof(int));
-	int* n_colind = (int*)malloc((nnz-m)*sizeof(int));
-	double* n_val = (double*)malloc((nnz-m)*sizeof(double));
+	int* n_colind = (int*)malloc((nnz-diagcntr)*sizeof(int));
+	double* n_val = (double*)malloc((nnz-diagcntr)*sizeof(double));
 
 	int counter = 0;
 	for(int i = 0; i < m; i++){

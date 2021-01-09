@@ -322,6 +322,13 @@ int PartGraph::GGPartitioningEdge(double ratioX, int* partition){
 		currWgtX = GetCurrWgt(part);
 		RefineEdge(ratioX,part);
 		int newScore = GetEdgecut(part);
+/* vert ver
+		edgecut = GetEdgecut(part);
+		VertSepFromEdgeSep(part);
+		SetWgtInfo(this,part,ratioX,tolerance,&wgtInfo);
+		RefineVert(part);
+		int newScore = GetVertSepSize(part);
+	*/
 //		fprintf(stderr,"%d\n",newScore);
 		if(bestScore > newScore){
 			ICopy(nvtxs,part,partition);
@@ -818,7 +825,7 @@ int PartGraph::InitPartitioningEdge(double ratioX, int* partition){
 }
 
 int PartGraph::InitPartitioningVert(double ratioX, int* partition){
-//	InitPartitioningEdge(ratioX,partition);
+//	GGPartitioningEdge(ratioX,partition);
 //	VertSepFromEdgeSep(partition);
 	for(int i = 0; i < nvtxs; i++) partition[i] = 2;
 
@@ -826,5 +833,6 @@ int PartGraph::InitPartitioningVert(double ratioX, int* partition){
 	SetWgtInfo(this,partition,ratioX,tolerance,&wgtInfo);
 	int vert_sep_size = RefineVert(partition);
 //	assert(vert_sep_size == GetVertSepSize(partition));
+	fprintf(stderr,"Ssize %d\n",vert_sep_size);
 	return vert_sep_size;
 }

@@ -51,13 +51,19 @@ public:
 	};
 	PartGraph(int nvtxs,int* xadj,int* adjncy,int* vwgt,int* ewgt,int* cewgt,int* adjwgt){
 		this->nvtxs = nvtxs;
-		this->xadj = xadj;
-		this->adjncy = adjncy;
-		this->vwgt = vwgt;
-		this->ewgt = ewgt;
-		this->cewgt = cewgt;
-		this->adjwgt = adjwgt;
 		nedges = xadj[nvtxs];
+		this->xadj = (int*)malloc((nvtxs+1)*sizeof(int));
+		std::copy(xadj,xadj+nvtxs+1,this->xadj);
+		this->adjncy = (int*)malloc(nedges*sizeof(int));
+		std::copy(adjncy,adjncy+nedges,this->adjncy);
+		this->vwgt = (int*)malloc(nvtxs*sizeof(int));
+		std::copy(vwgt,vwgt+nvtxs,this->vwgt);
+		this->ewgt = (int*)malloc(nedges*sizeof(int));
+		std::copy(ewgt,ewgt+nedges,this->ewgt);
+		this->cewgt = (int*)malloc(nvtxs*sizeof(int));
+		std::copy(cewgt,cewgt+nvtxs,this->cewgt);
+		this->adjwgt = (int*)malloc(nvtxs*sizeof(int));
+		std::copy(adjwgt,adjwgt+nvtxs,this->adjwgt);
 
 		tolerance = 0;
 		totalvwgt = 0;
@@ -65,14 +71,16 @@ public:
 		currWgtX = 0;
 		edgecut = 0;
 	};
-	~PartGraph(){ };
+	~PartGraph(){
+		DeleteGraph();
+	};
 	void DeleteGraph(){
-		free(adjwgt);
-		free(cewgt);
-		free(ewgt);
-		free(vwgt);
-		free(adjncy);
-		free(xadj);
+		if(adjwgt) { free(adjwgt); adjwgt = NULL; }
+		if(cewgt) { free(cewgt); cewgt = NULL; }
+		if(ewgt) { free(ewgt); ewgt = NULL; }
+		if(vwgt) { free(vwgt); vwgt = NULL; }
+		if(adjncy) { free(adjncy); adjncy = NULL; }
+		if(xadj) { free(xadj); xadj = NULL; }
 	};
 	int Vsize(){
 		return nvtxs;
