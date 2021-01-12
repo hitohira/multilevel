@@ -176,6 +176,9 @@ static bool ConditionWgt(int newWgtX,int minWgtX, int maxWgtX,int oldWgtX, int p
 	return false;
 */
 }
+static bool IsBalancedWgt(int newWgtX,int minWgtX, int maxWgtX){
+	return (minWgtX <= newWgtX && newWgtX <= maxWgtX);
+}
 VGPair FMDATA::PopMovedVertexEdge(int currWgtX, int minWgtX,int maxWgtX, PartGraph* pg){
 	int lgb = max_gain[0] > max_gain[1] ? 0 : 1;
 	int smb = 1 - lgb;
@@ -246,16 +249,14 @@ VGPair FMDATA::PopMovedVertexEdge(int currWgtX, int minWgtX,int maxWgtX, PartGra
 	return vgpair;
 }
 
-int FMDATA::UpdatePartEdgecutAndGainEdge(VGPair vg, int currWgtX, PartGraph* pg, int* partition){
+int FMDATA::UpdatePartEdgecutAndGainEdge(VGPair vg, int currWgtX, int minWgtX, int maxWgtX, PartGraph* pg, int* partition){
 //	fprintf(stderr,"enter\n");
 	int movedV = vg.v;
 	if(movedV == -1) return currWgtX;
 //	fprintf(stderr,"\t%d gain  %d == %d\n",movedV,vg.gain,pg->GetEdgeGain(movedV,partition));
-	edgecut -= vg.gain;
-	if(edgecut < min_edgecut){
-		min_edgecut = edgecut;
-		end_update_idx = free_cell.size();
-	}
+	int sgn = partition[movedV] == 0 ? -1 : 1;
+	int newWgtX = currWgtX + sgn*pg->Vwgt(movedV);
+
 //	fprintf(stderr,"adj gain\n");
 	for(int i = pg->Xadj(movedV); i < pg->Xadj(movedV+1); i++){
 		int u = pg->Adjncy(i);
@@ -298,11 +299,19 @@ st_option += t2-t1;
 		}
 	}
 	
+	edgecut -= vg.gain;
+	if(!IsBalancedWgt(newWgtX,minWgtX,maxWgtX)){ // TODO consider when nvtxs is close to original nvtxs
+		min_edgecut = edgecut;
+		end_update_idx = free_cell.size();
+	}
+	if(edgecut < min_edgecut){
+		min_edgecut = edgecut;
+		end_update_idx = free_cell.size();
+	}
 //	fprintf(stderr,"partition\n");
 	partition[movedV] = 1 - partition[movedV];
-	int sgn = partition[movedV] == 0 ? 1 : -1;
 //	fprintf(stderr,"exit\n");
-	return currWgtX + sgn*pg->Vwgt(movedV);
+	return newWgtX;
 }
 
 int FMDATA::BackTrackPartitionEdge(int currWgtX, PartGraph* pg, int* partition){
@@ -330,10 +339,10 @@ int FMDATA::RefineEdge(int currWgtX,int minWgtX, int maxWgtX, PartGraph* pg, int
 		old_edgecut = edgecut;
 		currWgtX = RefineEdgeInner(currWgtX,minWgtX,maxWgtX,pg,partition);
 		if(old_edgecut == edgecut) break;
-		if(old_edgecut < edgecut){
+//		if(old_edgecut < edgecut){ // it happen when imbalance
 //			fprintf(stderr,"old_edgecut < edgecut!!!\n");
-			return -1;
-		}
+//			return -1;
+//		}
 //		fprintf(stderr,"recunstruct\n");
 		double t1 = GetTime();
 		Reconstruct(pg,partition);
@@ -354,7 +363,7 @@ int FMDATA::RefineEdgeInner(int currWgtX,int minWgtX, int maxWgtX, PartGraph* pg
 		st_pop += t2-t1;
 		if(vg.v == -1) break;
 //		fprintf(stderr," update\n");
-		currWgtX = UpdatePartEdgecutAndGainEdge(vg,currWgtX,pg,partition);
+		currWgtX = UpdatePartEdgecutAndGainEdge(vg,currWgtX,minWgtX,maxWgtX,pg,partition);
 //		fprintf(stderr,"%d %d %d\n",currWgtX, pg->GetCurrWgt(partition), pg->GetEdgecut(partition));
 		double t3 = GetTime();
 		st_update += t3-t2;

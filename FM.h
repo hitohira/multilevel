@@ -73,7 +73,7 @@ public:
 	int RefineEdgeInner(int currWgtX,int minWgtX, int maxWgtX, PartGraph* pg, int* partition);
 
 	VGPair PopMovedVertexEdge(int currWgtX, int minWgtX,int maxWgtX, PartGraph* pg);
-	int UpdatePartEdgecutAndGainEdge(VGPair vg, int currWgtX, PartGraph* pg, int* partition);// ret newWgtX
+	int UpdatePartEdgecutAndGainEdge(VGPair vg, int currWgtX, int minWgtX, int maxWgtX, PartGraph* pg, int* partition);// ret newWgtX
 	int BackTrackPartitionEdge(int currWgtX, PartGraph* pg, int* partition); // ret newWgtX
 
 	int IndexBucket(int gain); // -pmax <= gain <= pmax -> 0 <= ret <= 2*pmax

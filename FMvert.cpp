@@ -207,20 +207,10 @@ int FMDATAvert::UpdatePartScoreAndGainVert(VGTri vg, WgtInfo* wgtInfo, PartGraph
 //	fprintf(stderr,"enter\n");
 	int movedV = vg.v;
 	if(movedV == -1) return score;
-/*
-	for(int i = pg->Xadj(39); i < pg->Xadj(39+1); i++){
-		int u = pg->Adjncy(i);
-		printf("%d",partition[u]);
-	}
-	puts("");
-	fprintf(stderr,"39-0 %d %d %d\n",partition[39], pg->GetVertGain(39,0,partition), cell_gain[0][39]);
-*/
 //	fprintf(stderr,"gain0 %d %d %d\n",movedV, pg->GetVertGain(movedV,0,partition), cell_gain[0][movedV]);
 //	fprintf(stderr,"gain1 %d %d %d\n",movedV, pg->GetVertGain(movedV,1,partition), cell_gain[1][movedV]);
 //	assert(pg->GetVertGain(movedV,0,partition) == cell_gain[0][movedV]);
 //	assert(pg->GetVertGain(movedV,1,partition) == cell_gain[1][movedV]);
-	
-
 
 	Trace trace; trace.v = movedV; trace.from = 2;
 	free_cell.push_back(trace);
@@ -330,10 +320,10 @@ int FMDATAvert::RefineVert(WgtInfo* wgtInfo, PartGraph* pg, int* partition){
 		old_score = score;
 		score = RefineVertInner(wgtInfo,pg,partition);
 		if(old_score == score) break;
-		if(old_score < score){
+//		if(old_score < score){
 //			fprintf(stderr,"old_edgecut < edgecut!!!\n");
-			return -1;
-		}
+//			return -1;
+//		}
 //		fprintf(stderr,"recunstruct\n");
 		double t1 = GetTime();
 		Reconstruct(pg,partition);

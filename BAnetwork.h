@@ -6,12 +6,13 @@
 #include <stdlib.h>
 
 class BAnetwork {
-private:
+public:
 	int N;
 	int ncores;
 	int* xadj;
 	int* adjncy;
-public:
+
+
 	BAnetwork(int N, int ncores=2){ // N = #vertices, start from $(ncores)-clique
 		this->N = N;
 		this->ncores = ncores;
@@ -49,7 +50,7 @@ public:
 		adjncy = new int[nlink*2];
 		int cntr = 0;
 		for(int i = 0; i < N; i++){
-			for(int j = 0; j < edges[i].size(); j++){
+			for(int j = 0; j < (int)edges[i].size(); j++){
 				adjncy[cntr++] = edges[i][j];
 			}
 			xadj[i+1] = xadj[i] + edges[i].size();
