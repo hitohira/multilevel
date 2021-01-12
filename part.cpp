@@ -32,6 +32,9 @@ private:
 void SetDefaultOptions(ndOptions* options){
 	options->ufactor = 5; // 0.5% + 0.5% = 1%
 	options->coarsenThreshold = 200;
+	options->matchingScheme = MATCHING_RM;
+	options->initPartScheme = INITPART_GGGP;
+	options->refineScheme = REFINE_EFM;
 }
 
 
@@ -622,10 +625,10 @@ int PartGraph::Partition2(ndOptions* options, double ratioX, int* partition){
 	int* map = (int*)malloc(nvtxs*sizeof(int));
 
 	if(nvtxs <= options->coarsenThreshold || Esize() == 0){
-		InitPartitioningEdge(ratioX,partition);
+		InitPartitioningEdge(options,ratioX,partition);
 	}
 	else{
-		int newSize = Coarsening(match,map);
+		int newSize = Coarsening(options,match,map);
 		fprintf(stderr,"size = %d\n",newSize);
 
 		int* coarserPart = (int*)malloc(newSize*sizeof(int));
@@ -636,7 +639,7 @@ int PartGraph::Partition2(ndOptions* options, double ratioX, int* partition){
 		
 		currWgtX = newGraph.currWgtX;
 		edgecut = newGraph.edgecut;
-		UncoarseningEdge(ratioX,map,coarserPart,partition);
+		UncoarseningEdge(options,ratioX,map,coarserPart,partition);
 
 		newGraph.DeleteGraph();
 		free(coarserPart);
@@ -664,15 +667,11 @@ int PartGraph::Partition3(ndOptions* options, double ratioX, int* partition){
 	int* map = (int*)malloc(nvtxs*sizeof(int));
 
 	if(nvtxs <= options->coarsenThreshold || Esize() == 0){
-		InitPartitioningVert(ratioX,partition);
+		InitPartitioningVert(options,ratioX,partition);
 		SetWgtInfo(this,partition,ratioX,tolerance,&wgtInfo);
 	}
 	else{
-		RandomMatching(match);
-	// 	HeavyEdgeMatching(match);
-	 //	LiteEdgeMatching(match);
-
-		int newSize = Mapping(match,map);
+		int newSize = Coarsening(options,match,map);
 		fprintf(stderr,"size = %d\n",newSize);
 
 		int* coarserPart = (int*)malloc(newSize*sizeof(int));
@@ -682,7 +681,7 @@ int PartGraph::Partition3(ndOptions* options, double ratioX, int* partition){
 	
 		wgtInfo = newGraph.wgtInfo;
 		wgtInfo.tol = 1.0*tolerance / totalvwgt;
-		UncoarseningVert(ratioX,map,coarserPart,partition);
+		UncoarseningVert(options,ratioX,map,coarserPart,partition);
 
 		newGraph.DeleteGraph();
 		free(coarserPart);
@@ -695,16 +694,23 @@ int PartGraph::Partition3(ndOptions* options, double ratioX, int* partition){
 }
 
 
-int PartGraph::Coarsening(int* match,int* map){
+int PartGraph::Coarsening(ndOptions* options, int* match,int* map){
 	// matching and map
-//	RandomMatching(match);
-	HeavyEdgeMatching(match);
+	if(options->matchingScheme == MATCHING_RM){
+		RandomMatching(match);
+	}
+	else if(options->matchingScheme == MATCHING_HEM){
+		HeavyEdgeMatching(match);
+	}
+	else if(options->matchingScheme == MATCHING_LEM){
+		LiteEdgeMatching(match);
+	}
 
 	int newSize = Mapping(match,map);
 	return newSize;
 }
 
-int PartGraph::UncoarseningEdge(double ratioX, int* map,int* coarserPart,int* partition){
+int PartGraph::UncoarseningEdge(ndOptions* options,double ratioX, int* map,int* coarserPart,int* partition){
 	// project
 	for(int i = 0; i < nvtxs; i++){
 		partition[i] = coarserPart[map[i]];
@@ -717,7 +723,7 @@ int PartGraph::UncoarseningEdge(double ratioX, int* map,int* coarserPart,int* pa
 	return new_ecut;
 }
 
-int PartGraph::UncoarseningVert(double ratioX, int* map,int* coarserPart,int* partition){
+int PartGraph::UncoarseningVert(ndOptions* options, double ratioX, int* map,int* coarserPart,int* partition){
 	// project
 	for(int i = 0; i < nvtxs; i++){
 		partition[i] = coarserPart[map[i]];
@@ -819,12 +825,14 @@ void PartGraph::Show(int* partition){
 	}
 }
 
-int PartGraph::InitPartitioningEdge(double ratioX, int* partition){
-//	return GGPartitioningEdge(ratioX,partition);
+int PartGraph::InitPartitioningEdge(ndOptions* options, double ratioX, int* partition){
+	if(options->initPartScheme == INITPART_GGP){
+		return GGPartitioningEdge(ratioX,partition);
+	}
 	return GGGPartitioningEdge(ratioX,partition);
 }
 
-int PartGraph::InitPartitioningVert(double ratioX, int* partition){
+int PartGraph::InitPartitioningVert(ndOptions* options, double ratioX, int* partition){
 //	GGPartitioningEdge(ratioX,partition);
 //	VertSepFromEdgeSep(partition);
 	for(int i = 0; i < nvtxs; i++) partition[i] = 2;

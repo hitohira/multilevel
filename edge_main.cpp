@@ -23,41 +23,6 @@ const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G
 const double ratioX = 0.5;
 
 
-int rec(PartGraph* pg,int* match,int* map){
-	fprintf(stderr,"%d\t%d\n",pg->Vsize(), pg->Esize());
-	if(pg->Vsize() < 200 || pg->Esize() < 200){
-		int* partition = (int*)malloc(pg->Vsize()*sizeof(int));
-		if(partition == NULL) fprintf(stderr,"mem X\n");
-		ndOptions options;
-		SetDefaultOptions(&options);
-		pg->SetTolerance(&options);
-		pg->InitPartitioningEdge(ratioX,partition);
-		/*
-		FMDATA fm(pg,partition);
-		int currWgtX = 0;
-		int totalWgt = 0;
-		for(int i = 0; i < pg->Vsize(); i++){
-			if(partition[i] == 0) currWgtX += pg->Vwgt(i);
-			totalWgt += pg->Vwgt(i);
-		}
-		int minWgtX = totalWgt*ratioX - pg->Tolerance();
-		int maxWgtX = totalWgt*ratioX + pg->Tolerance();
-		fprintf(stderr,"start refine %d %d %d\n",currWgtX,minWgtX,maxWgtX);
-		currWgtX = fm.RefineEdge(currWgtX,minWgtX,maxWgtX,pg,partition);
-		fprintf(stderr,"edge cut %d -> %d\n",old_ecut,fm.Edgecut());
-		*/
-		pg->Show(partition);
-		free(partition);
-		return 0;
-	}
-	int newSize = pg->Coarsening(match,map);
-	PartGraph coarser;
-	pg->GenerateCoarserGraph(newSize,match,map,&coarser);
-	rec(&coarser,match,map);
-	coarser.DeleteGraph();
-	return 0;
-}
-
 int main(){
 	unsigned seed = (unsigned)time(NULL);
 	srand(seed);
@@ -102,6 +67,7 @@ int main(){
 
 	ndOptions options;
 	SetDefaultOptions(&options);
+	options.matchingScheme = MATCHING_HEM;
 	
 	for(int i = 0; i < 100; i++)
 	{

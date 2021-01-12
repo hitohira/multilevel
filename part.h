@@ -9,9 +9,25 @@
 #include "wgt.h"
 #include "FM.h"
 
+
+#define MATCHING_RM 0
+#define MATCHING_HEM 1
+#define MATCHING_LEM 2
+
+#define INITPART_GGP 0
+#define INITPART_GGGP 1
+
+#define REFINE_EFM 0
+#define REFINE_EBFM 1
+#define REFINE_VFM 0
+#define REFINE_VFM2 1
+
 typedef struct ndOptions{
 	int ufactor; // allowed imbalance x/1000
 	int coarsenThreshold;
+	int matchingScheme;
+	int initPartScheme;
+	int refineScheme;
 } ndOptions;
 
 void SetDefaultOptions(ndOptions* options);
@@ -132,24 +148,24 @@ public:
 	int GetVertGainCewgt(int v, int to, int* partition); 
 	int GetVertSepSizeCewgt(int* partition);
 
-	int Coarsening(int* match, int* map); // map[nvtxs], match[nvtxs], ret val = nvtxs of coarser graph
+	int Coarsening(ndOptions* options, int* match, int* map); // map[nvtxs], match[nvtxs], ret val = nvtxs of coarser graph
 	int RandomMatching(int* match);
 	int HeavyEdgeMatching(int* match);
 	int LiteEdgeMatching(int* match);
 	int Mapping(const int* match, int* map); // ret val = nvtxs of coarser graph
 	int GenerateCoarserGraph(int newSize, const int* match, const int* map, PartGraph* newGraph);
 	
-	int InitPartitioningEdge(double ratioX, int* partition); // divide G to X=0 and Y=1. ret val = |Y|
+	int InitPartitioningEdge(ndOptions* options, double ratioX, int* partition); // divide G to X=0 and Y=1. ret val = |Y|
 	int GGPartitioningEdge(double ratioX, int* partition); // Graph Growing Algorithm
 	int GGGPartitioningEdge(double ratioX, int* partition); // Greedy Graph Growing Algorithm
 	int GetLargeGainVertexFromBoundary(std::vector<int> &list,int* partition,int val);
 
-	int InitPartitioningVert(double ratioX, int* partition);
+	int InitPartitioningVert(ndOptions* options, double ratioX, int* partition);
 
-	int UncoarseningEdge(double ratioX, int* map,int* coarserPart,int* partition);
+	int UncoarseningEdge(ndOptions* options, double ratioX, int* map,int* coarserPart,int* partition);
 	int RefineEdge(double ratioX, int* partition);
 
-	int UncoarseningVert(double ratioX, int* map, int* coarserPart, int* partition);
+	int UncoarseningVert(ndOptions* options, double ratioX, int* map, int* coarserPart, int* partition);
 	int RefineVert(int* partition); // using this->wgtInfo internally
 };
 
