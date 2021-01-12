@@ -98,15 +98,26 @@ void FMDATAvert2::PrintSt(){
 static double CalcRatio(WgtInfo* wgtInfo){
 	return 1.0*(wgtInfo->wgt[0] + wgtInfo->wgt[2]) / (wgtInfo->wgt[0] + wgtInfo->wgt[1] + 2*wgtInfo->wgt[2]);
 }
-//TODO consider vertices that come to separator
-static double CalcRatioNew(int part, int wgt, WgtInfo* wgtInfo){
-	double sep = wgtInfo->wgt[2];
-	if(part == 0){
-		return 1.0*(wgtInfo->wgt[0]+wgt + sep) / (wgtInfo->wgt[0]+wgt + wgtInfo->wgt[1] + 2*sep);
+static double CalcRatioNew(int v, int to, WgtInfo* wgtInfo, PartGraph* pg, int* partition){
+	int wgt = pg->Vwgt(v);
+	int w[2];
+	w[0] = wgtInfo->wgt[0];
+	w[1] = wgtInfo->wgt[1];
+	int sep = wgtInfo->wgt[2] - wgt;
+	if(to == 0){
+		w[0] += wgt;
 	}
 	else {
-		return 1.0*(wgtInfo->wgt[0] + sep) / (wgtInfo->wgt[0] + wgtInfo->wgt[1]+wgt + 2*sep);
+		w[1] += wgt;
 	}
+	for(int i = pg->Xadj(v); i < pg->Xadj(v+1); i++){
+		int u = pg->Adjncy(i);
+		if(partition[u] == 1-to){
+			sep += pg->Vwgt(u);
+			w[1-to] -= pg->Vwgt(u);
+		}
+	}
+	return 1.0*(w[0] + sep) / (w[0] + w[1] + 2*sep);
 }
 static bool ConditionWgt(double ratioNow, double ratioNew, WgtInfo* wgtInfo){
 	double ratioX = wgtInfo->ratioX;
@@ -117,7 +128,7 @@ static bool ConditionWgt(double ratioNow, double ratioNew, WgtInfo* wgtInfo){
 		(ratioNew < ratioL && ratioNow < ratioNew) ||
 		(ratioNew > ratioH && ratioNow > ratioNew);
 }
-VGTri FMDATAvert2::PopMovedVertexVert(WgtInfo* wgtInfo, PartGraph* pg){
+VGTri FMDATAvert2::PopMovedVertexVert(WgtInfo* wgtInfo, PartGraph* pg, int* partition){
 	int lgb = max_gain[0] > max_gain[1] ? 0 : 1;
 	int smb = 1 - lgb;
 	int threshold = -pmax;
@@ -128,8 +139,7 @@ VGTri FMDATAvert2::PopMovedVertexVert(WgtInfo* wgtInfo, PartGraph* pg){
 			DoubleLinkedListItem* ptr = bucket[lgb][idx].Begin();
 			while(ptr != NULL){
 				int v = ptr->item;
-				int w = pg->Vwgt(v);
-				double ratioNew = CalcRatioNew(lgb,w,wgtInfo);
+				double ratioNew = CalcRatioNew(v,lgb,wgtInfo,pg,partition);
 				if(ConditionWgt(ratioNow,ratioNew,wgtInfo)){
 					bucket[lgb][idx].Erase(ptr);
 					bucket[smb][idx].Erase(cell[smb][v]);
@@ -158,8 +168,7 @@ VGTri FMDATAvert2::PopMovedVertexVert(WgtInfo* wgtInfo, PartGraph* pg){
 			se = bucket[seb][idx].Begin();
 			while(fi != NULL){
 				int v = fi->item;
-				int w = pg->Vwgt(v);
-				double ratioNew = CalcRatioNew(fib,w,wgtInfo);
+				double ratioNew = CalcRatioNew(v,fib,wgtInfo,pg,partition);
 				if(ConditionWgt(ratioNow,ratioNew,wgtInfo)){
 					bucket[fib][idx].Erase(fi);
 					bucket[seb][idx].Erase(cell[seb][v]);
@@ -174,8 +183,7 @@ VGTri FMDATAvert2::PopMovedVertexVert(WgtInfo* wgtInfo, PartGraph* pg){
 			}
 			while(se != NULL){
 				int v = se->item;
-				int w = pg->Vwgt(v);
-				double ratioNew = CalcRatioNew(seb,w,wgtInfo);
+				double ratioNew = CalcRatioNew(v,seb,wgtInfo,pg,partition);
 				if(ConditionWgt(ratioNow,ratioNew,wgtInfo)){
 					bucket[seb][idx].Erase(se);
 					bucket[fib][idx].Erase(cell[fib][v]);
@@ -330,7 +338,7 @@ int FMDATAvert2::RefineVertInner(WgtInfo* wgtInfo, PartGraph* pg, int* partition
 //		assert(edgecut == pg->GetEdgecut(partition));
 //		fprintf(stderr,"%dpop",rep);
 		double t1 = GetTime();
-		VGTri vg = PopMovedVertexVert(wgtInfo,pg);
+		VGTri vg = PopMovedVertexVert(wgtInfo,pg,partition);
 		double t2 = GetTime();
 		st_pop += t2-t1;
 		if(vg.v == -1) break;

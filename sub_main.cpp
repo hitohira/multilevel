@@ -3,7 +3,7 @@
 #include "part.h"
 
 int main(int argc,char** argv){
-	int N = 3000;
+	int N = 20000;
 	if(argc == 2){
 		N = atoi(argv[1]);
 	}

@@ -744,7 +744,7 @@ int PartGraph::UpperEdgeGain(){
 int PartGraph::UpperVertGain(){
 	int ret = INT_MIN;
 	for(int i = 0; i < nvtxs; i++){
-		int g = 0;
+		int g = vwgt[i];
 		for(int j = xadj[i]; j < xadj[i+1]; j++){
 			int u = adjncy[j];
 			g += vwgt[u];
@@ -756,7 +756,7 @@ int PartGraph::UpperVertGain(){
 int PartGraph::UpperVertGainCewgt(){
 	int ret = INT_MIN;
 	for(int i = 0; i < nvtxs; i++){
-		int g = 0;
+		int g = cewgt[i];
 		for(int j = xadj[i]; j < xadj[i+1]; j++){
 			int u = adjncy[j];
 			g += cewgt[u];
@@ -828,7 +828,6 @@ int PartGraph::InitPartitioningVert(double ratioX, int* partition){
 //	GGPartitioningEdge(ratioX,partition);
 //	VertSepFromEdgeSep(partition);
 	for(int i = 0; i < nvtxs; i++) partition[i] = 2;
-
 
 	SetWgtInfo(this,partition,ratioX,tolerance,&wgtInfo);
 	int vert_sep_size = RefineVert(partition);

@@ -125,7 +125,7 @@ public:
 	int RefineVert(WgtInfo* wgtInfo, PartGraph* pg, int* partition); // wgtInfo updated
 	int RefineVertInner(WgtInfo* wgtInfo, PartGraph* pg, int* partition);
 
-	VGTri PopMovedVertexVert(WgtInfo* wgtInfo, PartGraph* pg);
+	VGTri PopMovedVertexVert(WgtInfo* wgtInfo, PartGraph* pg, int* partition);
 	int UpdatePartScoreAndGainVert(VGTri vg, WgtInfo* wgtInfo, PartGraph* pg, int* partition);// wgtInfo updated
 	int BackTrackPartitionVert(WgtInfo* wgtInfo, PartGraph* pg, int* partition); //wgtinfo updated
 
@@ -165,7 +165,7 @@ public:
 	int RefineVert(WgtInfo* wgtInfo, PartGraph* pg, int* partition); // wgtInfo updated
 	int RefineVertInner(WgtInfo* wgtInfo, PartGraph* pg, int* partition);
 
-	VGTri PopMovedVertexVert(WgtInfo* wgtInfo, PartGraph* pg);
+	VGTri PopMovedVertexVert(WgtInfo* wgtInfo, PartGraph* pg, int* partition);
 	int UpdatePartScoreAndGainVert(VGTri vg, WgtInfo* wgtInfo, PartGraph* pg, int* partition);// wgtInfo updated
 	int BackTrackPartitionVert(WgtInfo* wgtInfo, PartGraph* pg, int* partition); //wgtinfo updated
 
