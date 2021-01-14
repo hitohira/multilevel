@@ -319,10 +319,10 @@ int FMDATAvert2::RefineVert(WgtInfo* wgtInfo, PartGraph* pg, int* partition){
 		old_score = score;
 		score = RefineVertInner(wgtInfo,pg,partition);
 		if(old_score == score) break;
-		if(old_score < score){
+//		if(old_score < score){
 //			fprintf(stderr,"old_edgecut < edgecut!!!\n");
-			return -1;
-		}
+//			return -1;
+//		}
 //		fprintf(stderr,"recunstruct\n");
 		double t1 = GetTime();
 		Reconstruct(pg,partition);

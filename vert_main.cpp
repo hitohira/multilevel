@@ -23,6 +23,7 @@ const double ratioX = 0.5;
 
 int main(){
 	unsigned seed = (unsigned)time(NULL);
+	seed = 1610591357;
 	srand(seed);
 	fprintf(stderr,"seed %u\n",seed);
 

@@ -156,17 +156,17 @@ public:
 	int GenerateCoarserGraph(int newSize, const int* match, const int* map, PartGraph* newGraph);
 	
 	int InitPartitioningEdge(ndOptions* options, double ratioX, int* partition); // divide G to X=0 and Y=1. ret val = |Y|
-	int GGPartitioningEdge(double ratioX, int* partition); // Graph Growing Algorithm
-	int GGGPartitioningEdge(double ratioX, int* partition); // Greedy Graph Growing Algorithm
+	int GGPartitioningEdge(ndOptions* options, double ratioX, int* partition); // Graph Growing Algorithm
+	int GGGPartitioningEdge(ndOptions* options, double ratioX, int* partition); // Greedy Graph Growing Algorithm
 	int GetLargeGainVertexFromBoundary(std::vector<int> &list,int* partition,int val);
 
 	int InitPartitioningVert(ndOptions* options, double ratioX, int* partition);
 
 	int UncoarseningEdge(ndOptions* options, double ratioX, int* map,int* coarserPart,int* partition);
-	int RefineEdge(double ratioX, int* partition);
+	int RefineEdge(ndOptions* options, double ratioX, int* partition);
 
 	int UncoarseningVert(ndOptions* options, double ratioX, int* map, int* coarserPart, int* partition);
-	int RefineVert(int* partition); // using this->wgtInfo internally
+	int RefineVert(ndOptions* options, int* partition); // using this->wgtInfo internally
 };
 
 #endif

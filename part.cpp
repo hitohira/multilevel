@@ -279,7 +279,7 @@ int PartGraph::GenerateCoarserGraph(int newSize, const int* match, const int* ma
 	return 0;
 }
 
-int PartGraph::GGPartitioningEdge(double ratioX, int* partition){
+int PartGraph::GGPartitioningEdge(ndOptions* options,double ratioX, int* partition){
 	const int GGP_TIMES = 100;
 	double ratio; // if ratio is close to 1, finding an unvisited value may be difficult in some cases
 	int val;
@@ -323,7 +323,7 @@ int PartGraph::GGPartitioningEdge(double ratioX, int* partition){
 			}
 		}
 		currWgtX = GetCurrWgt(part);
-		RefineEdge(ratioX,part);
+		RefineEdge(options,ratioX,part);
 		int newScore = GetEdgecut(part);
 /* vert ver
 		edgecut = GetEdgecut(part);
@@ -389,7 +389,7 @@ int PartGraph::GetLargeGainVertexFromBoundary(std::vector<int> &list,int* partit
 	return v;
 }
 
-int PartGraph::GGGPartitioningEdge(double ratioX, int* partition){
+int PartGraph::GGGPartitioningEdge(ndOptions* options, double ratioX, int* partition){
 	const int GGGP_TIMES = 100;
 	double ratio;
 	int val;
@@ -419,7 +419,7 @@ int PartGraph::GGGPartitioningEdge(double ratioX, int* partition){
 			if(part[k] == 0) tmp2 += vwgt[k];
 		}
 		currWgtX = GetCurrWgt(part);
-		RefineEdge(ratioX,part);
+		RefineEdge(options,ratioX,part);
 		int tmp = 0;
 		for(int k = 0; k < nvtxs; k++){
 			if(part[k] == 0) tmp += vwgt[k];
@@ -514,7 +514,7 @@ int PartGraph::GetVertSepSizeCewgt(int* partition){
 }
 
 
-int PartGraph::RefineEdge(double ratioX, int* partition){
+int PartGraph::RefineEdge(ndOptions* options, double ratioX, int* partition){
 	FMDATA fm(this,partition);
 	int totalWgt = totalvwgt;
 	int minWgtX = (int)(totalWgt*ratioX - tolerance);
@@ -525,12 +525,18 @@ int PartGraph::RefineEdge(double ratioX, int* partition){
 	return edgecut;
 }
 
-int PartGraph::RefineVert(int* partition){
-	FMDATAvert fm(this,partition);
-//	FMDATAvert2 fm(this,partition);
-//	SetWgtInfo(this,partition,ratioX,tolerance,&wgtInfo);
-	int vert_sep_size = fm.RefineVert(&wgtInfo,this,partition);
-	fm.PrintSt();
+int PartGraph::RefineVert(ndOptions* options, int* partition){
+	int vert_sep_size;
+	if(options->refineScheme == REFINE_VFM2){
+		FMDATAvert2 fm(this,partition);
+		vert_sep_size = fm.RefineVert(&wgtInfo,this,partition);
+		fm.PrintSt();
+	}
+	else{
+		FMDATAvert fm(this,partition);
+		vert_sep_size = fm.RefineVert(&wgtInfo,this,partition);
+		fm.PrintSt();
+	}
 	return vert_sep_size;
 }
 
@@ -717,7 +723,7 @@ int PartGraph::UncoarseningEdge(ndOptions* options,double ratioX, int* map,int* 
 	}
 
 	// refinement
-	int new_ecut = RefineEdge(ratioX,partition);
+	int new_ecut = RefineEdge(options,ratioX,partition);
 	assert(edgecut == GetEdgecut(partition));
 
 	return new_ecut;
@@ -730,7 +736,7 @@ int PartGraph::UncoarseningVert(ndOptions* options, double ratioX, int* map,int*
 	}
 
 	// refinement
-	int vert_sep_size = RefineVert(partition);
+	int vert_sep_size = RefineVert(options,partition);
 //	assert(vert_sep_size == GetVertSepSize(partition));
 
 	return vert_sep_size;
@@ -827,18 +833,18 @@ void PartGraph::Show(int* partition){
 
 int PartGraph::InitPartitioningEdge(ndOptions* options, double ratioX, int* partition){
 	if(options->initPartScheme == INITPART_GGP){
-		return GGPartitioningEdge(ratioX,partition);
+		return GGPartitioningEdge(options,ratioX,partition);
 	}
-	return GGGPartitioningEdge(ratioX,partition);
+	return GGGPartitioningEdge(options,ratioX,partition);
 }
 
 int PartGraph::InitPartitioningVert(ndOptions* options, double ratioX, int* partition){
-//	GGPartitioningEdge(ratioX,partition);
+//	GGPartitioningEdge(options,ratioX,partition);
 //	VertSepFromEdgeSep(partition);
 	for(int i = 0; i < nvtxs; i++) partition[i] = 2;
 
 	SetWgtInfo(this,partition,ratioX,tolerance,&wgtInfo);
-	int vert_sep_size = RefineVert(partition);
+	int vert_sep_size = RefineVert(options,partition);
 //	assert(vert_sep_size == GetVertSepSize(partition));
 	fprintf(stderr,"Ssize %d\n",vert_sep_size);
 	return vert_sep_size;

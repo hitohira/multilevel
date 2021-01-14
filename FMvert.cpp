@@ -6,6 +6,7 @@
 
 #include "FM.h"
 
+
 static double GetTime(){
 #ifdef FM_DEBUG
 	struct timeval tv;
@@ -53,7 +54,11 @@ void FMDATAvert::Construct(PartGraph* pg,int* partition){
 		bucket[1][idx].SetState(i);
 	}
 	for(int i = 0; i < nvtxs; i++){
-		if(partition[i] != 2) continue;
+		if(partition[i] != 2){
+			if(cell[0][i] == &moved) cell[0][i] = NULL;
+			if(cell[1][i] == &moved) cell[1][i] = NULL;
+			continue;
+		}
 		for(int j = 0; j < 2; j++){
 			int gain = pg->GetVertGain(i,j,partition);
 			int idx = IndexBucket(gain);
@@ -84,7 +89,11 @@ void FMDATAvert::Reconstruct(PartGraph* pg, int* partition){
 		bucket[1][idx].EraseAll();
 	}
 	for(int i = 0; i < nvtxs; i++){
-		if(partition[i] != 2) continue;
+		if(partition[i] != 2){
+//			if(cell[0][i] == &moved) cell[0][i] = NULL;
+//			if(cell[1][i] == &moved) cell[1][i] = NULL;
+			continue;
+		}
 		for(int j = 0; j < 2; j++){
 			int gain = pg->GetVertGain(i,j,partition);
 			int idx = IndexBucket(gain);
@@ -147,7 +156,7 @@ static bool IsBalancedWgt(double ratio, WgtInfo* wgtInfo){
 VGTri FMDATAvert::PopMovedVertexVert(WgtInfo* wgtInfo, PartGraph* pg, int* partition){
 	int lgb = max_gain[0] > max_gain[1] ? 0 : 1;
 	int smb = 1 - lgb;
-	int threshold = -pmax;
+	int threshold = -pmax * 0.5;
 	double ratioNow = CalcRatio(wgtInfo);
 	for(int i = max_gain[lgb]; i >= threshold; i--){
 		int idx = IndexBucket(i);
@@ -158,9 +167,11 @@ VGTri FMDATAvert::PopMovedVertexVert(WgtInfo* wgtInfo, PartGraph* pg, int* parti
 				double ratioNew = CalcRatioNew(v,lgb,wgtInfo,pg,partition);
 				if(ConditionWgt(ratioNow,ratioNew,wgtInfo)){
 					bucket[lgb][idx].Erase(ptr);
-					bucket[smb][idx].Erase(cell[smb][v]);
-					cell[0][v] = &moved;
-					cell[1][v] = &moved;
+					cell[lgb][v] = &moved;
+					if(cell[smb][v] != &moved){
+						bucket[smb][idx].Erase(cell[smb][v]);
+						cell[smb][v] = NULL;
+					}
 					VGTri pr; pr.v = v; pr.gain = i;		
 					pr.to = lgb;
 //					fprintf(stderr,"vgm %d %d",pr.v,pr.gain);
@@ -187,9 +198,11 @@ VGTri FMDATAvert::PopMovedVertexVert(WgtInfo* wgtInfo, PartGraph* pg, int* parti
 				double ratioNew = CalcRatioNew(v,fib,wgtInfo,pg,partition);
 				if(ConditionWgt(ratioNow,ratioNew,wgtInfo)){
 					bucket[fib][idx].Erase(fi);
-					bucket[seb][idx].Erase(cell[seb][v]);
-					cell[0][v] = &moved;
-					cell[1][v] = &moved;
+					cell[fib][v] = &moved;
+					if(cell[seb][v] != &moved){
+						bucket[seb][idx].Erase(cell[seb][v]);
+						cell[seb][v] = NULL;
+					}
 					VGTri pr; pr.v = v; pr.gain = i;		
 					pr.to = fib;
 //					fprintf(stderr,"vgf %d %d",pr.v,pr.gain);
@@ -202,9 +215,11 @@ VGTri FMDATAvert::PopMovedVertexVert(WgtInfo* wgtInfo, PartGraph* pg, int* parti
 				double ratioNew = CalcRatioNew(v,seb,wgtInfo,pg,partition);
 				if(ConditionWgt(ratioNow,ratioNew,wgtInfo)){
 					bucket[seb][idx].Erase(se);
-					bucket[fib][idx].Erase(cell[fib][v]);
-					cell[0][v] = &moved;
-					cell[1][v] = &moved;
+					cell[seb][v] = &moved;
+					if(cell[fib][v] != &moved){
+						bucket[fib][idx].Erase(cell[fib][v]);
+						cell[fib][v] = NULL;
+					}
 					VGTri pr; pr.v = v; pr.gain = i;		
 					pr.to = seb;
 //					fprintf(stderr,"vgs %d %d",pr.v,pr.gain);
@@ -222,10 +237,8 @@ int FMDATAvert::UpdatePartScoreAndGainVert(VGTri vg, WgtInfo* wgtInfo, PartGraph
 //	fprintf(stderr,"enter\n");
 	int movedV = vg.v;
 	if(movedV == -1) return score;
-//	fprintf(stderr,"gain0 %d %d %d\n",movedV, pg->GetVertGain(movedV,0,partition), cell_gain[0][movedV]);
-//	fprintf(stderr,"gain1 %d %d %d\n",movedV, pg->GetVertGain(movedV,1,partition), cell_gain[1][movedV]);
-//	assert(pg->GetVertGain(movedV,0,partition) == cell_gain[0][movedV]);
-//	assert(pg->GetVertGain(movedV,1,partition) == cell_gain[1][movedV]);
+
+//	assert(pg->GetVertGain(movedV,vg.to,partition) == cell_gain[vg.to][movedV]);
 
 	Trace trace; trace.v = movedV; trace.from = 2;
 	free_cell.push_back(trace);
@@ -248,16 +261,18 @@ int FMDATAvert::UpdatePartScoreAndGainVert(VGTri vg, WgtInfo* wgtInfo, PartGraph
 				wgtInfo->wgt[ppu] -= pg->Vwgt(u);
 				if(cell[0][u] != &moved){
 					cell[0][u] = NULL;
+				}
+				if(cell[1][u] != &moved){
 					cell[1][u] = NULL;
 				}
 				for(int k = pg->Xadj(u); k < pg->Xadj(u+1); k++){
 					int u2 = pg->Adjncy(k); // 2 hop adjacent of movedV
-					if(partition[u2] == 2 && cell[0][u2] != &moved){ // if u2 is in S, u2's gain is also changed
-						updateList.insert(u2);
+					if(partition[u2] == 2 && (cell[0][u2] != &moved || cell[1][u2] != &moved)){ 
+						updateList.insert(u2);   // if u2 is in S, u2's gain is also changed
 					}
 				}
 			}
-			if(cell[0][u] != &moved){ // because this has not already moved and shold add bucket
+			if(cell[0][u] != &moved || cell[1][u] != &moved){// because this has not already moved and shold add bucket
 				updateList.insert(u);
 			}
 		}
@@ -265,16 +280,20 @@ int FMDATAvert::UpdatePartScoreAndGainVert(VGTri vg, WgtInfo* wgtInfo, PartGraph
 //	fprintf(stderr,"update gain\n");
 	for(std::set<int>::iterator itr = updateList.begin(); itr != updateList.end(); itr++){
 		int u = *itr;
-		if(cell[0][u] != NULL){ // vertex in S before move -> delete bucket item
+		if(cell[0][u] != NULL && cell[0][u] != &moved){ // vertex in S before move -> delete bucket item
 			delete cell[0][u];
+		}
+		if(cell[1][u] != NULL && cell[1][u] != &moved){
 			delete cell[1][u];
 		}
 		for(int j = 0; j < 2; j++){ // re-calcuration of gain and register to bucket
-			int gain = pg->GetVertGain(u,j,partition);
-			int idx = IndexBucket(gain);
-			cell[j][u] = bucket[j][idx].PushFront(u);
-			cell_gain[j][u] = gain;
-			if(gain > max_gain[j]) max_gain[j] = gain;
+			if(cell[j][u] != &moved){
+				int gain = pg->GetVertGain(u,j,partition);
+				int idx = IndexBucket(gain);
+				cell[j][u] = bucket[j][idx].PushFront(u);
+				cell_gain[j][u] = gain;
+				if(gain > max_gain[j]) max_gain[j] = gain;
+			}
 		}
 	}
 	double t2 = GetTime();
@@ -334,7 +353,7 @@ int FMDATAvert::IndexBucket(int gain){
 
 int FMDATAvert::RefineVert(WgtInfo* wgtInfo, PartGraph* pg, int* partition){
 	int old_score;
-	while(1){
+	for(int rep = 0; rep < 5; rep++){
 //		fprintf(stderr,"edgecut : wgt = %d : %d\n",edgecut,currWgtX);
 //		fprintf(stderr,"min max %d  %d\n",minWgtX,maxWgtX);
 		old_score = score;
@@ -344,7 +363,7 @@ int FMDATAvert::RefineVert(WgtInfo* wgtInfo, PartGraph* pg, int* partition){
 //			fprintf(stderr,"old_edgecut < edgecut!!!\n");
 //			return -1;
 //		}
-//		fprintf(stderr,"recunstruct\n");
+//		fprintf(stderr,"reconstruct %d\n",score);
 		double t1 = GetTime();
 		Reconstruct(pg,partition);
 		double t2 = GetTime();
@@ -358,6 +377,7 @@ int FMDATAvert::RefineVertInner(WgtInfo* wgtInfo, PartGraph* pg, int* partition)
 //		fprintf(stderr,"score %d == %d, min %d\n",edgecut,pg->GetEdgecut(partition),min_edgecut);
 //		assert(edgecut == pg->GetEdgecut(partition));
 //		fprintf(stderr,"%dpop",rep);
+//	fprintf(stderr," begin pop\n");
 		double t1 = GetTime();
 		VGTri vg = PopMovedVertexVert(wgtInfo,pg,partition);
 		double t2 = GetTime();

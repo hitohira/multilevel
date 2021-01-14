@@ -25,8 +25,8 @@ int main(int argc,char** argv){
 	int* partition = new int[N];
 
 	for(int i = 0; i < N; i++){
-		vwgt[i] = 1;
-//		vwgt[i] = ba.xadj[i+1] - ba.xadj[i] + 1;
+//		vwgt[i] = 1;
+		vwgt[i] = ba.xadj[i+1] - ba.xadj[i] + 1;
 		cewgt[i] = 1;
 		adjwgt[i] = ba.xadj[i+1] - ba.xadj[i];
 	}
@@ -38,6 +38,7 @@ int main(int argc,char** argv){
 	
 	ndOptions options;
 	SetDefaultOptions(&options);
+//	options.refineScheme = REFINE_VFM2;
 
 	double ratioX = 0.5;
 	if(1){	
