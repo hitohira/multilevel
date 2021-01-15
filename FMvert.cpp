@@ -114,7 +114,7 @@ void FMDATAvert::PrintSt(){
 #endif
 }
 static double CalcRatio(WgtInfo* wgtInfo){
-	return 1.0*(wgtInfo->wgt[0] + wgtInfo->wgt[2]) / (wgtInfo->wgt[0] + wgtInfo->wgt[1] + 2*wgtInfo->wgt[2]);
+	return 1.0*(wgtInfo->wgt[0] + wgtInfo->wgt[2]) / (wgtInfo->wgt[1] + wgtInfo->wgt[2]);
 }
 static double CalcRatioNew(int v,int to, WgtInfo* wgtInfo, PartGraph* pg, int* partition){
 	int wgt = pg->Vwgt(v);
@@ -135,11 +135,12 @@ static double CalcRatioNew(int v,int to, WgtInfo* wgtInfo, PartGraph* pg, int* p
 			w[1-to] -= pg->Vwgt(u);
 		}
 	}
-	return 1.0*(w[0] + sep) / (w[0] + w[1] + 2*sep);
+	return 1.0*(w[0] + sep) / (w[1] + sep);
 }
 static bool ConditionWgt(double ratioNow, double ratioNew, WgtInfo* wgtInfo){
 	double ratioX = wgtInfo->ratioX;
-	double tol = wgtInfo->tol;
+	ratioX = ratioX / (1.0 - ratioX);
+	double tol = wgtInfo->tol / (1.0 - wgtInfo->ratioX);
 	double ratioL = ratioX - tol;
 	double ratioH = ratioX + tol;
 	return (ratioL <= ratioNew && ratioNew <= ratioH) ||
