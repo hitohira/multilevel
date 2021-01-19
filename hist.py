@@ -16,5 +16,5 @@ print("max",np.max(X))
 print("ratio of 0",1.0*(len(X)-np.count_nonzero(X)) / len(X))
 print("> 100", np.count_nonzero(X > 100))
 
-plt.hist(X,bins=100)
+plt.hist(X,bins=200)
 plt.show()

@@ -38,14 +38,18 @@ public:
 		nlink /= 2;
 
 		for(int i = ncores; i < N; i++){
-			for(int j = 0; j < i; j++){
-				double p = 1.0 * edges[j].size() / nlink;
-				if(drand() < p){
-					edges[j].push_back(i);
-					edges[i].push_back(j);
-					nlink++;
+			int nlink_add = 0;
+			while(nlink_add == 0){
+				for(int j = 0; j < i; j++){
+					double p = 1.0 * edges[j].size() / nlink;
+					if(drand() < p){
+						edges[j].push_back(i);
+						edges[i].push_back(j);
+						nlink_add++;
+					}
 				}
 			}
+			nlink += nlink_add;
 		}
 		adjncy = new int[nlink*2];
 		int cntr = 0;

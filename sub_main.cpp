@@ -50,7 +50,7 @@ int main(int argc,char** argv){
 	
 	ndOptions options;
 	SetDefaultOptions(&options);
-	options.ufactor = 100;
+//	options.ufactor = 50;
 //	options.coarsenThreshold = 1000;
 //	options.refineScheme = REFINE_VFM2;
 
@@ -66,6 +66,7 @@ int main(int argc,char** argv){
 	if(1){
 		pg.Partition3(&options,ratioX,partition);
 		PrintData(pg.Vsize(),partition,dbg);
+		PrintData(pg.Vsize(),partition,cewgt);
 		if(pg.VertSepIsOK(partition))
 			printf("%d\n",pg.GetVertSepSizeCewgt(partition));
 		else
