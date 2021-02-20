@@ -77,7 +77,7 @@ void SparseMatrix::RemoveDiagonal(){
 		}
 	}
 	n_rowptr[m] = counter;
-	assert(counter == nnz - m);
+	assert(counter == nnz - diagcntr);
 	
 	free(rowptr);
 	free(colind);
@@ -147,21 +147,39 @@ int SparseMatrix::tCSRLoadFromMM(const char* filename){
 		if(i % 1000000 == 0) fprintf(stderr,"%d / %d\n",i,nz);
 		int x,y;
 		double f;
-		if(fscanf(fp,"%d %d %lf",&y,&x,&f) != 3){
+		if(fgets(buf,4096,fp) == NULL){
+			fclose(fp);
+			return -1;
+		}
+		int fn = sscanf(buf,"%d %d %lf",&y,&x,&f);
+		if(!(fn == 2 || fn == 3)) {
 			fclose(fp);
 			m = n = 0;
 			return -1;
 		}
-		val[i] = f;
+		if(fn == 3){
+			val[i] = f;
+		}
+		else{
+			val[i] = 1.0;
+		}
 		colind[i] = y-1;
 		if(x-1 != tmpR){
 			while(tmpR != x-1){
 				tmpR++;
-				rowptr[tmpR] = 0;
+				if(tmpR <= 0){
+					rowptr[tmpR] = 0;
+				}
+				else{
+					rowptr[tmpR] = rowptr[tmpR-1];
+				}
 			}
 			rowptr[x-1] = i;
 			tmpR = x-1;
 		}
+	}
+	for(int i = tmpR+1; i < m; i++){ // if row( > tmpR) has no nnz value, this loop is needed.
+		rowptr[i] = rowptr[i-1];
 	}
 	fclose(fp);
 	return 0;
@@ -190,8 +208,10 @@ int SparseMatrix::Expand(){
 				break;
 			}
 		}
+		if(both) break;
 	}
 	if(both){ // upper and lower part exist
+		fprintf(stderr,"both data exist\n");
 		return 0;
 	}
 	// else upper or lower only
