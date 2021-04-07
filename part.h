@@ -8,11 +8,13 @@
 
 #include "wgt.h"
 #include "FM.h"
+#include "clustermap.h"
 
 
 #define MATCHING_RM 0
 #define MATCHING_HEM 1
 #define MATCHING_LEM 2
+#define MATCHING_CLUSTER 3
 
 #define INITPART_GGP 0
 #define INITPART_GGGP 1
@@ -154,6 +156,9 @@ public:
 	int LiteEdgeMatching(int* match);
 	int Mapping(const int* match, int* map); // ret val = nvtxs of coarser graph
 	int GenerateCoarserGraph(int newSize, const int* match, const int* map, PartGraph* newGraph);
+
+	int ClusteringMatchingAndMapping(MatchData &md, int* map);
+	int GenerateClusteringCoarserGraph(MatchData &md, int* map, PartGraph* newGraph);
 	
 	int InitPartitioningEdge(ndOptions* options, double ratioX, int* partition); // divide G to X=0 and Y=1. ret val = |Y|
 	int GGPartitioningEdge(ndOptions* options, double ratioX, int* partition); // Graph Growing Algorithm

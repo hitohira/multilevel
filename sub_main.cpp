@@ -50,6 +50,7 @@ int main(int argc,char** argv){
 	
 	ndOptions options;
 	SetDefaultOptions(&options);
+	options.matchingScheme = MATCHING_CLUSTER;
 //	options.ufactor = 50;
 //	options.coarsenThreshold = 1000;
 //	options.refineScheme = REFINE_VFM2;

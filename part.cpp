@@ -168,6 +168,159 @@ int PartGraph::LiteEdgeMatching(int* match){
 }
 
 
+int PartGraph::ClusteringMatchingAndMapping(MatchData &md, int* map){
+	int counter_match = 0;
+	int map_len = 0;
+	int threshold_stop = nvtxs / 2;
+	int threshold_weigt = nvtxs / 20;
+
+	int* grpv = (int*)malloc(nvtxs*sizeof(int));
+	RandomPermuteVector(nvtxs,grpv);
+
+	for(int i = 0; i < nvtxs; i++){
+		map[i] = -1;
+	}
+
+	for(int i = 0; i < nvtxs; i++){
+		int vidx = grpv[i];
+		if(map[vidx] != -1) continue; // already matched, so you shold do nothing
+
+		// v is not matched yet bellow
+		
+		if(counter_match >= threshold_stop){ // so many vertices has already been matched
+			map[vidx] = map_len;
+			md.Add(map_len,vidx,this);
+			map_len++;
+			continue;
+		}
+		if(vwgt[vidx] >= threshold_weigt){ // v is too heavy
+			map[vidx] = map_len;
+			md.Add(map_len,vidx,this);
+			map_len++;
+			continue;
+		}
+
+		// try match
+		// w(e) max -> w(u) min
+		int mxewgt = INT_MIN;
+		int mnuwgt = INT_MAX;
+		int idx = -1;
+		for(int j = xadj[vidx]; j < xadj[vidx+1]; j++){
+			int uidx = adjncy[j];
+			// limit cluster size
+			if(vwgt[uidx] + vwgt[vidx] >= threshold_weigt){
+				continue;
+			}
+			if(map[uidx] != -1 && md.Weigt(map[uidx]) + vwgt[vidx] >= threshold_weigt){
+				continue;
+			}
+
+			// get best edge
+			if(ewgt[j] > mxewgt){
+				idx = j;
+				mxewgt = ewgt[j];
+				mnuwgt = vwgt[uidx];
+			}
+			else if(ewgt[j] == mxewgt && vwgt[uidx] < mnuwgt){
+				idx = j;
+				mxewgt = ewgt[j];
+				mnuwgt = vwgt[uidx];
+			}
+		}
+		if(idx != -1){ // match OK
+			counter_match++;
+
+			int uidx = adjncy[idx];
+			if(map[uidx] == -1){ // u has not been matched yet
+				map[vidx] = map[uidx] = map_len;
+				md.Add(map_len,vidx,this);
+				md.Add(map_len,uidx,this);
+				map_len++;
+			}
+			else{ // u has already matched
+				map[vidx] = map[uidx];
+				md.Add(map[uidx],vidx,this);
+			}
+		}
+		else { // not matched (because all u are too heavy)
+			map[vidx] = map_len;
+			md.Add(map_len,vidx,this);
+			map_len++;
+		}
+	}
+
+	free(grpv);
+	return map_len;
+}
+
+int PartGraph::GenerateClusteringCoarserGraph(MatchData &md, int* map, PartGraph* newGraph){
+	int newSize = md.GetMappedSize();
+
+	newGraph->nvtxs = newSize;
+	newGraph->xadj = (int*)malloc((newSize+1)*sizeof(int));
+	newGraph->vwgt = (int*)malloc(newSize*sizeof(int));
+	newGraph->cewgt = (int*)malloc(newSize*sizeof(int));
+	newGraph->adjwgt = (int*)malloc(newSize*sizeof(int));
+
+	newGraph->totalvwgt = totalvwgt;
+	newGraph->tolerance = tolerance;
+
+	int* tAdjncy = (int*)malloc(nedges*sizeof(int));
+	int* tEwgt = (int*)malloc(nedges*sizeof(int));
+	
+	int ecount = 0;
+	for(int i = 0; i < newSize; i++){
+		newGraph->xadj[i] = ecount;
+		newGraph->vwgt[i] = md.Weigt(i);
+
+		int sum_cewgt = 0;
+		int sum_adjwgt = 0;
+		int len = md.MatchSize(i);
+		std::map<int,int> st = std::map<int,int>();
+		for(int j = 0; j < len; j++){
+			int v = md.Match(i,j);
+			sum_cewgt += cewgt[v];
+			sum_adjwgt += adjwgt[v];
+			for(int k = xadj[v]; k < xadj[v+1]; k++){
+				int uidx = adjncy[k];
+				int vuwgt = ewgt[k];
+				int umap = map[uidx];
+				std::map<int,int>::iterator itr = st.find(umap);
+				if(itr == st.end()){
+					st.insert(std::make_pair(umap,vuwgt));
+				}
+				else{
+					itr->second += vuwgt;
+				}
+			}
+		}
+		for(std::map<int,int>::iterator im = st.begin(); im != st.end(); im++){
+			tAdjncy[ecount] = im->first;
+			tEwgt[ecount] = im->second;
+			ecount++;
+		}
+
+		int wv1v2Expand = md.Cewgt(i);
+//		newGraph->cewgt[i] = sum_cewgt + wv1v2Expand; // for original
+		newGraph->cewgt[i] = sum_cewgt; // for #vert version
+		newGraph->adjwgt[i] = sum_adjwgt - 2*wv1v2Expand; 
+	}
+	newGraph->xadj[newSize] = ecount;
+
+	// set edge data
+	newGraph->nedges = ecount;
+	newGraph->adjncy = (int*)malloc(newGraph->nedges * sizeof(int));
+	newGraph->ewgt = (int*)malloc(newGraph->nedges * sizeof(int));
+	for(int i = 0; i < newGraph->nedges; i++){ // to save mem size , copy array
+		newGraph->adjncy[i] = tAdjncy[i];
+		newGraph->ewgt[i] = tEwgt[i];
+	}
+
+	free(tEwgt);
+	free(tAdjncy);
+	return 0;
+}
+
 // if i < j -> map[i] <= map[j]
 int PartGraph::Mapping(const int* match, int* map){
 	// init
@@ -669,7 +822,6 @@ int PartGraph::Partition3(ndOptions* options, double ratioX, int* partition){
 //	double ratioY = 1 - ratioX;
 	SetTolerance(options);
 
-	int* match = (int*)malloc(nvtxs*sizeof(int));
 	int* map = (int*)malloc(nvtxs*sizeof(int));
 
 	if(nvtxs <= options->coarsenThreshold || Esize() == 0){
@@ -677,12 +829,22 @@ int PartGraph::Partition3(ndOptions* options, double ratioX, int* partition){
 		SetWgtInfo(this,partition,ratioX,tolerance,&wgtInfo);
 	}
 	else{
-		int newSize = Coarsening(options,match,map);
+		int newSize;	
+		PartGraph newGraph;
+		if(options->matchingScheme == MATCHING_CLUSTER){ 
+			MatchData md(nvtxs);
+			newSize = ClusteringMatchingAndMapping(md,map);
+			GenerateClusteringCoarserGraph(md,map,&newGraph);
+		}
+		else{
+			int* match = (int*)malloc(nvtxs*sizeof(int));
+			newSize = Coarsening(options,match,map);
+			GenerateCoarserGraph(newSize,match,map,&newGraph);
+			free(match);
+		}
 		fprintf(stderr,"size = %d\n",newSize);
 
 		int* coarserPart = (int*)malloc(newSize*sizeof(int));
-		PartGraph newGraph;
-		GenerateCoarserGraph(newSize,match,map,&newGraph);
 		newGraph.Partition3(options,ratioX,coarserPart);		
 	
 		wgtInfo = newGraph.wgtInfo;
@@ -694,7 +856,6 @@ int PartGraph::Partition3(ndOptions* options, double ratioX, int* partition){
 	}
 		
 	free(map);
-	free(match);
 	fprintf(stderr,"Xwgt %d (%f), Ssize %d (%f) (size %d)\n",wgtInfo.wgt[0],1.0*wgtInfo.wgt[0]/totalvwgt,wgtInfo.wgt[2],1.0*wgtInfo.wgt[2]/totalvwgt,nvtxs);
 	return 0; 
 }
