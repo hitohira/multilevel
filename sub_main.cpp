@@ -14,11 +14,12 @@ void PrintData(int n, int* partition,int* array){
 
 int main(int argc,char** argv){
 	int N = 20000;
+//	int N = 500;
 	if(argc == 2){
 		N = atoi(argv[1]);
 	}
-	unsigned seed = (unsigned)time(NULL);
-//	unsigned seed = 1610422192;
+//	unsigned seed = (unsigned)time(NULL);
+	unsigned seed = 1617865892;
 	fprintf(stderr,"%d\n",seed);
 	srand(seed);
 	BAnetwork ba(N);

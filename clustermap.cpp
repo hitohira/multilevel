@@ -1,6 +1,9 @@
 #include "clustermap.h"
 #include "part.h" 
 
+#include <stdio.h>
+#include <assert.h>
+
 void MatchData::Add(int mapidx, int vidx, PartGraph* pg){
 	// update cewgt
 	for(int i = 0; i < (int)match[mapidx].list.size(); i++){

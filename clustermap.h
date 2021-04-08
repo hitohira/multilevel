@@ -14,6 +14,7 @@ public:
 	Cmatch(){
 		wgt = 0;
 		cewgt = 0;	
+		list = std::vector<int>();
 	}
 	~Cmatch(){}
 };
@@ -28,10 +29,10 @@ public:
 	MatchData(int n){
 		this->n = n;
 		used_n = 0;
-		match = (Cmatch*)malloc(n*sizeof(Cmatch));
+		match = new Cmatch[n];
 	}
 	~MatchData(){
-		free(match);
+		delete[] match;
 	}
 	int GetMappedSize(){
 		return used_n;
@@ -42,7 +43,7 @@ public:
 	int Match(int i,int j){
 		return match[i].list[j];
 	}
-	int Weigt(int i){
+	int Weight(int i){
 		return match[i].wgt;
 	}
 	int Cewgt(int i){

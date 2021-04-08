@@ -41,6 +41,9 @@ void SetDefaultOptions(ndOptions* options){
 /////////////////
 // util functions
 /////////////////
+static void dbg(int n){
+	printf("dbg %d\n",n);
+}
 
 static void Iswap(int* x,int* y){
 	int tmp = *x;
@@ -180,9 +183,9 @@ int PartGraph::ClusteringMatchingAndMapping(MatchData &md, int* map){
 	for(int i = 0; i < nvtxs; i++){
 		map[i] = -1;
 	}
-
 	for(int i = 0; i < nvtxs; i++){
 		int vidx = grpv[i];
+
 		if(map[vidx] != -1) continue; // already matched, so you shold do nothing
 
 		// v is not matched yet bellow
@@ -211,7 +214,7 @@ int PartGraph::ClusteringMatchingAndMapping(MatchData &md, int* map){
 			if(vwgt[uidx] + vwgt[vidx] >= threshold_weigt){
 				continue;
 			}
-			if(map[uidx] != -1 && md.Weigt(map[uidx]) + vwgt[vidx] >= threshold_weigt){
+			if(map[uidx] != -1 && md.Weight(map[uidx]) + vwgt[vidx] >= threshold_weigt){
 				continue;
 			}
 
@@ -227,10 +230,12 @@ int PartGraph::ClusteringMatchingAndMapping(MatchData &md, int* map){
 				mnuwgt = vwgt[uidx];
 			}
 		}
+
 		if(idx != -1){ // match OK
 			counter_match++;
 
 			int uidx = adjncy[idx];
+			assert(uidx < nvtxs);
 			if(map[uidx] == -1){ // u has not been matched yet
 				map[vidx] = map[uidx] = map_len;
 				md.Add(map_len,vidx,this);
@@ -248,7 +253,6 @@ int PartGraph::ClusteringMatchingAndMapping(MatchData &md, int* map){
 			map_len++;
 		}
 	}
-
 	free(grpv);
 	return map_len;
 }
@@ -271,7 +275,7 @@ int PartGraph::GenerateClusteringCoarserGraph(MatchData &md, int* map, PartGraph
 	int ecount = 0;
 	for(int i = 0; i < newSize; i++){
 		newGraph->xadj[i] = ecount;
-		newGraph->vwgt[i] = md.Weigt(i);
+		newGraph->vwgt[i] = md.Weight(i);
 
 		int sum_cewgt = 0;
 		int sum_adjwgt = 0;
@@ -285,6 +289,7 @@ int PartGraph::GenerateClusteringCoarserGraph(MatchData &md, int* map, PartGraph
 				int uidx = adjncy[k];
 				int vuwgt = ewgt[k];
 				int umap = map[uidx];
+				if(umap == map[v]) continue; // same coarsened vertex
 				std::map<int,int>::iterator itr = st.find(umap);
 				if(itr == st.end()){
 					st.insert(std::make_pair(umap,vuwgt));
@@ -306,7 +311,7 @@ int PartGraph::GenerateClusteringCoarserGraph(MatchData &md, int* map, PartGraph
 		newGraph->adjwgt[i] = sum_adjwgt - 2*wv1v2Expand; 
 	}
 	newGraph->xadj[newSize] = ecount;
-
+	
 	// set edge data
 	newGraph->nedges = ecount;
 	newGraph->adjncy = (int*)malloc(newGraph->nedges * sizeof(int));
@@ -315,7 +320,6 @@ int PartGraph::GenerateClusteringCoarserGraph(MatchData &md, int* map, PartGraph
 		newGraph->adjncy[i] = tAdjncy[i];
 		newGraph->ewgt[i] = tEwgt[i];
 	}
-
 	free(tEwgt);
 	free(tAdjncy);
 	return 0;
