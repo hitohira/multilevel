@@ -1,7 +1,7 @@
 MAIN = edge_main
 VERT = vert_main
 SUB = sub_main
-OBJS = part.o load.o FM.o FMvert.o FMvert2.o clustermap.o
+OBJS = part.o load.o FM.o FMvert.o FMvert2.o clustermap.o ordering.o
 
 CXX = g++
 CXXFLAGS = -O3 -Wall

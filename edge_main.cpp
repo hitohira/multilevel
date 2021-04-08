@@ -3,6 +3,7 @@
 #include <time.h>
 #include "part.h"
 #include "load.h"
+#include "ordering.h"
 
 //const char* filename = "../centrality/matrix/bcsstk17/bcsstk17.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G3_circuit.mtx";
@@ -39,6 +40,18 @@ int main(){
 	csr.RemoveDiagonal();
 //	csr.Dump();
 	csr.GenerateBitmap("mat.bmp");
+
+/*
+	// CM
+	SparseMatrix cmmat;
+	IVec perm;
+	puts("CM");
+	CuthillMcKee(csr,perm);
+	puts("Rearrange");
+	Rearrange(csr,perm,cmmat);
+	cmmat.GenerateBitmap("cm.bmp");
+	return 0;
+*/
 /*
 	int nvtxs      = 5;
 //	int nedges     = 12;

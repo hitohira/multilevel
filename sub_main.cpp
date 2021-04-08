@@ -1,6 +1,7 @@
 #include "BAnetwork.h"
 #include <time.h>
 #include "part.h"
+#include "ordering.h"
 
 void PrintData(int n, int* partition,int* array){
 	int sm[3] = {0,0,0};
@@ -45,6 +46,23 @@ int main(int argc,char** argv){
 	for(int i = 0; i < nnz; i++){
 		ewgt[i] = 1;
 	}
+	
+	// CM
+	/*
+	{
+		double* val = (double*)malloc(ba.xadj[N]*sizeof(double));
+		for(int i = 0; i < ba.xadj[N]; i++) val[i] = 1.0;
+		SparseMatrix mat(N, N, ba.xadj, ba.adjncy, val);
+		SparseMatrix cmmat;
+		IVec perm;
+		CuthillMcKee(mat,perm);
+		Rearrange(mat,perm,cmmat);
+		mat.GenerateBitmap("mat.bmp");
+		cmmat.GenerateBitmap("cm.bmp");
+		free(val);
+	}
+	*/
+	
 
 	PartGraph pg(N,ba.xadj,ba.adjncy,vwgt,ewgt,cewgt,adjwgt);
 	

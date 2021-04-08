@@ -8,10 +8,60 @@
 
 #include "bitmap.h"
 
+SparseMatrix::SparseMatrix(){
+	m = n = 0;
+	rowptr = NULL;
+	colind = NULL;
+	val = NULL;
+}
+SparseMatrix::SparseMatrix(int m, int n, int* rowptr, int* colind, double* val){
+	this->rowptr = NULL;
+	this->colind = NULL;
+	this->val = NULL;
+	Copy(m,n,rowptr,colind,val);
+}
+
+void SparseMatrix::Copy(int m, int n, int* rowptr, int* colind, double* val){
+	Reset();
+	this->m = m;
+	this->n = n;
+	int nnz = rowptr[m];
+	this->rowptr = (int*)malloc((m+1)*sizeof(int));
+	this->colind = (int*)malloc(nnz*sizeof(int));
+	this->val = (double*)malloc(nnz*sizeof(double));
+
+	for(int i = 0; i <= m; i++){
+		this->rowptr[i] = rowptr[i];
+	}
+	for(int i = 0; i < nnz; i++){
+		this->colind[i] = colind[i];
+		this->val[i] = val[i];
+	}
+}
+
 // read MM format
 SparseMatrix::SparseMatrix(const char* filename){
 	tCSRLoadFromMM(filename);
 	Expand();
+}
+
+SparseMatrix::~SparseMatrix(){
+	Reset();
+}
+
+void SparseMatrix::Reset(){
+	if(rowptr){
+		free(rowptr);
+		rowptr = NULL;
+	}
+	if(colind){
+		free(colind);
+		colind = NULL;
+	}
+	if(val){
+		free(val);
+		val = NULL;
+	}
 }
 
 void SparseMatrix::Dump(){

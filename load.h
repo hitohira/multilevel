@@ -12,13 +12,19 @@ typedef struct {
 } GraphData;
 
 class SparseMatrix{
-private:
+public:
 	int m,n;
 	int* rowptr; // size = m+1
 	int* colind; // size = rowptr[m]
 	double* val; // size = rowptr[m]
-public:
+
+	SparseMatrix();
+	SparseMatrix(int m, int n, int* rowptr, int* colind, double* val);
 	SparseMatrix(const char* filename); // read MM format
+	~SparseMatrix();
+
+	void Reset();
+	void Copy(int m, int n, int* rowptr, int* colind, double* val);
 
 	void Dump();
 	void GenerateBitmap(const char* filename);
