@@ -84,8 +84,8 @@ int main(){
 
 	ndOptions options;
 	SetDefaultOptions(&options);
-	options.matchingScheme = MATCHING_HEM;
-//	options.matchingScheme = MATCHING_CLUSTER;
+//	options.matchingScheme = MATCHING_HEM;
+	options.matchingScheme = MATCHING_CLUSTER;
 	
 	for(int i = 0; i < 100; i++)
 	{

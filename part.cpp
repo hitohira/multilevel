@@ -792,32 +792,45 @@ int PartGraph::Partition2(ndOptions* options, double ratioX, int* partition){
 //	double ratioY = 1 - ratioX;
 	SetTolerance(options);
 
-	int* match = (int*)malloc(nvtxs*sizeof(int));
 	int* map = (int*)malloc(nvtxs*sizeof(int));
 
 	if(nvtxs <= options->coarsenThreshold || Esize() == 0){
 		InitPartitioningEdge(options,ratioX,partition);
 	}
 	else{
-		int newSize = Coarsening(options,match,map);
-		fprintf(stderr,"size = %d\n",newSize);
-
-		int* coarserPart = (int*)malloc(newSize*sizeof(int));
+		int newSize;
 		PartGraph newGraph;
-		GenerateCoarserGraph(newSize,match,map,&newGraph);
-		newGraph.Partition2(options,ratioX,coarserPart);		
-	
-		
-		currWgtX = newGraph.currWgtX;
-		edgecut = newGraph.edgecut;
-		UncoarseningEdge(options,ratioX,map,coarserPart,partition);
+		if(options->matchingScheme == MATCHING_CLUSTER){ 
+			MatchData md(nvtxs);
+			newSize = ClusteringMatchingAndMapping(md,map);
+			GenerateClusteringCoarserGraph(md,map,&newGraph);
+		}
+		else{
+			int* match = (int*)malloc(nvtxs*sizeof(int));
+			newSize = Coarsening(options,match,map);
+			GenerateCoarserGraph(newSize,match,map,&newGraph);
+			free(match);
+		}
 
-		newGraph.DeleteGraph();
-		free(coarserPart);
+		fprintf(stderr,"size = %d\n",newSize);
+		
+		if(newSize != nvtxs){
+			int* coarserPart = (int*)malloc(newSize*sizeof(int));
+			newGraph.Partition2(options,ratioX,coarserPart);		
+			
+			currWgtX = newGraph.currWgtX;
+			edgecut = newGraph.edgecut;
+			UncoarseningEdge(options,ratioX,map,coarserPart,partition);
+
+			newGraph.DeleteGraph();
+			free(coarserPart);
+		}
+		else{
+			InitPartitioningEdge(options,ratioX,partition);
+		}
 	}
 		
 	free(map);
-	free(match);
 	fprintf(stderr,"Xwgt %d (%f), Ecut %d (size %d)\n",currWgtX,1.0*currWgtX/totalvwgt,edgecut,nvtxs);
 /*
 		int dbg = 0;
@@ -855,16 +868,22 @@ int PartGraph::Partition3(ndOptions* options, double ratioX, int* partition){
 			free(match);
 		}
 		fprintf(stderr,"size = %d\n",newSize);
-
-		int* coarserPart = (int*)malloc(newSize*sizeof(int));
-		newGraph.Partition3(options,ratioX,coarserPart);		
+		
+		if(nvtxs != newSize){
+			int* coarserPart = (int*)malloc(newSize*sizeof(int));
+			newGraph.Partition3(options,ratioX,coarserPart);		
 	
-		wgtInfo = newGraph.wgtInfo;
-		wgtInfo.tol = 1.0*tolerance / totalvwgt;
-		UncoarseningVert(options,ratioX,map,coarserPart,partition);
+			wgtInfo = newGraph.wgtInfo;
+			wgtInfo.tol = 1.0*tolerance / totalvwgt;
+			UncoarseningVert(options,ratioX,map,coarserPart,partition);
 
-		newGraph.DeleteGraph();
-		free(coarserPart);
+			newGraph.DeleteGraph();
+			free(coarserPart);
+		}
+		else{
+			InitPartitioningVert(options,ratioX,partition);
+			SetWgtInfo(this,partition,ratioX,tolerance,&wgtInfo);
+		}
 	}
 		
 	free(map);

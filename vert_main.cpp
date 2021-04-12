@@ -5,7 +5,7 @@
 #include "load.h"
 
 //const char* filename = "../centrality/matrix/bcsstk17/bcsstk17.mtx";
-const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G3_circuit.mtx";
+//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G3_circuit.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef2/crystm02/crystm02.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ecology2/ecology2.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef/bundle1/bundle1.mtx";
@@ -20,7 +20,7 @@ const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/sym/TEM152078/TEM152078.mtx";
 
 
-//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-Youtube/com-Youtube.mtx";
+const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-Youtube/com-Youtube.mtx";
 
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-LiveJournal/com-LiveJournal.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/hollywood-2009/hollywood-2009.mtx";
@@ -73,6 +73,7 @@ int main(){
 
 	ndOptions options;
 	SetDefaultOptions(&options);
+	options.matchingScheme = MATCHING_CLUSTER;
 	
 	for(int i = 0; i < 100; i++)
 	{
