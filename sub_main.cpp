@@ -18,8 +18,8 @@ int main(int argc,char** argv){
 	if(argc == 2){
 		N = atoi(argv[1]);
 	}
-//	unsigned seed = (unsigned)time(NULL);
-	unsigned seed = 1617865892;
+	unsigned seed = (unsigned)time(NULL);
+//	unsigned seed = 1617865892;
 	fprintf(stderr,"%d\n",seed);
 	srand(seed);
 	BAnetwork ba(N);
@@ -70,7 +70,7 @@ int main(int argc,char** argv){
 	ndOptions options;
 	SetDefaultOptions(&options);
 	options.matchingScheme = MATCHING_CLUSTER;
-//	options.ufactor = 50;
+	options.ufactor = 50;
 //	options.coarsenThreshold = 1000;
 //	options.refineScheme = REFINE_VFM2;
 

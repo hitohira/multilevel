@@ -175,7 +175,7 @@ int PartGraph::ClusteringMatchingAndMapping(MatchData &md, int* map){
 	int counter_match = 0;
 	int map_len = 0;
 	int threshold_stop = nvtxs / 2;
-	int threshold_weigt = nvtxs / 20;
+	int threshold_weigt = totalvwgt / 20;
 
 	int* grpv = (int*)malloc(nvtxs*sizeof(int));
 	RandomPermuteVector(nvtxs,grpv);
@@ -259,7 +259,15 @@ int PartGraph::ClusteringMatchingAndMapping(MatchData &md, int* map){
 
 int PartGraph::GenerateClusteringCoarserGraph(MatchData &md, int* map, PartGraph* newGraph){
 	int newSize = md.GetMappedSize();
-
+/*
+	if(nvtxs == newSize){
+		printf("dump\n");
+		for(int i = 0; i < nvtxs; i++){
+			printf("%d %d %d\n",i,vwgt[i],xadj[i+1] - xadj[i]);
+		}
+		exit(0);
+	}
+*/
 	newGraph->nvtxs = newSize;
 	newGraph->xadj = (int*)malloc((newSize+1)*sizeof(int));
 	newGraph->vwgt = (int*)malloc(newSize*sizeof(int));
