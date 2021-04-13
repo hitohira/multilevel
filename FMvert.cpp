@@ -5,7 +5,7 @@
 #include <set>
 
 #include "FM.h"
-
+#define FM_DEBUG
 
 static double GetTime(){
 #ifdef FM_DEBUG
@@ -157,6 +157,7 @@ static bool IsBalancedWgt(double ratio, WgtInfo* wgtInfo){
 VGTri FMDATAvert::PopMovedVertexVert(WgtInfo* wgtInfo, PartGraph* pg, int* partition){
 	int lgb = max_gain[0] > max_gain[1] ? 0 : 1;
 	int smb = 1 - lgb;
+//	int threshold = 1;
 	int threshold = -pmax * 0.5;
 	double ratioNow = CalcRatio(wgtInfo);
 	for(int i = max_gain[lgb]; i >= threshold; i--){
@@ -364,7 +365,7 @@ int FMDATAvert::RefineVert(WgtInfo* wgtInfo, PartGraph* pg, int* partition){
 //			fprintf(stderr,"old_edgecut < edgecut!!!\n");
 //			return -1;
 //		}
-//		fprintf(stderr,"reconstruct %d\n",score);
+		fprintf(stderr,"reconstruct %d\n",score);
 		double t1 = GetTime();
 		Reconstruct(pg,partition);
 		double t2 = GetTime();
@@ -386,7 +387,7 @@ int FMDATAvert::RefineVertInner(WgtInfo* wgtInfo, PartGraph* pg, int* partition)
 		if(vg.v == -1) break;
 //	fprintf(stderr," begin update\n");
 		UpdatePartScoreAndGainVert(vg,wgtInfo,pg,partition);
-//	fprintf(stderr," end update\n");
+//	fprintf(stderr," end update %d\n",score);
 //		fprintf(stderr,"%d %d %d\n",currWgtX, pg->GetCurrWgt(partition), pg->GetEdgecut(partition));
 		double t3 = GetTime();
 		st_update += t3-t2;

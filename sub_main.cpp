@@ -9,7 +9,7 @@ void PrintData(int n, int* partition,int* array){
 		sm[partition[i]] += array[i];
 	}
 	int total = sm[0] + sm[1] + sm[2];
-	printf("%d %d %d %f %f\n",sm[0],sm[1],sm[2],1.0*sm[0]/total,1.0*sm[1]/total);
+	printf("%d %d %d %f %f\n",sm[0],sm[1],sm[2],1.0*(sm[0]+sm[2])/total,1.0*(sm[1]+sm[2])/total);
 }
 
 int main(int argc,char** argv){
