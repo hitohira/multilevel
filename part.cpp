@@ -788,6 +788,11 @@ int PartGraph::VertSepFromEdgeSep(int* partition){
 /////////////////
 
 int PartGraph::Partition2(ndOptions* options, double ratioX, int* partition){
+	Partition2Inner(options,ratioX,partition);
+	RefineEdge(options,ratioX,partition);
+	return 0;
+}
+int PartGraph::Partition2Inner(ndOptions* options, double ratioX, int* partition){
  // partition[nvtxs] // 0->X, 1->Y
 //	double ratioY = 1 - ratioX;
 	SetTolerance(options);
@@ -842,7 +847,7 @@ int PartGraph::Partition2(ndOptions* options, double ratioX, int* partition){
 	return 0; 
 }
 
-int PartGraph::Partition3(ndOptions* options, double ratioX, int* partition){
+int PartGraph::Partition3Inner(ndOptions* options, double ratioX, int* partition){
  // partition[nvtxs] // 0->X, 1->Y, 2->S
 //	double ratioY = 1 - ratioX;
 	SetTolerance(options);
@@ -871,7 +876,7 @@ int PartGraph::Partition3(ndOptions* options, double ratioX, int* partition){
 		
 		if(nvtxs != newSize){
 			int* coarserPart = (int*)malloc(newSize*sizeof(int));
-			newGraph.Partition3(options,ratioX,coarserPart);		
+			newGraph.Partition3Inner(options,ratioX,coarserPart);		
 	
 			wgtInfo = newGraph.wgtInfo;
 			wgtInfo.tol = 1.0*tolerance / totalvwgt;
@@ -889,6 +894,11 @@ int PartGraph::Partition3(ndOptions* options, double ratioX, int* partition){
 	free(map);
 	fprintf(stderr,"Xwgt %d (%f), Ssize %d (%f) (size %d)\n",wgtInfo.wgt[0],1.0*wgtInfo.wgt[0]/totalvwgt,wgtInfo.wgt[2],1.0*wgtInfo.wgt[2]/totalvwgt,nvtxs);
 	return 0; 
+}
+int PartGraph::Partition3(ndOptions* options, double ratioX, int* partition){
+	Partition3Inner(options,ratioX,partition);
+	RefineVert(options,partition);
+	return 0;
 }
 
 
@@ -916,7 +926,7 @@ int PartGraph::UncoarseningEdge(ndOptions* options,double ratioX, int* map,int* 
 
 	// refinement
 	int new_ecut = RefineEdge(options,ratioX,partition);
-	assert(edgecut == GetEdgecut(partition));
+//	assert(edgecut == GetEdgecut(partition));
 
 	return new_ecut;
 }

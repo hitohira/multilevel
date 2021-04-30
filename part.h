@@ -136,9 +136,11 @@ public:
 
 	// partition[nvtxs] // 0->X, 1->Y // ratioY = 1.0 - ratioX
 	int Partition2(ndOptions* options, double ratioX, int* partition); 
+	int Partition2Inner(ndOptions* options, double ratioX, int* partition); 
 
 	// partition[nvtxs] // 0->X, 1->Y, 2->S // ratioY = 1.0 - ratioX
 	int Partition3(ndOptions* options, double ratioX, int* partition);
+	int Partition3Inner(ndOptions* options, double ratioX, int* partition);
 
 	int GetCurrWgt(int* partition);
 

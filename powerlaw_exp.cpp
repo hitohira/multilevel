@@ -6,7 +6,7 @@
 #include "ordering.h"
 #include "load.h"
 
-int type_part_nnz = 0;
+int type_part_nnz = 1;
 int type_sep_nnz = 0;
 int type_ba = 0;
 int type_powerlaw = 1;
@@ -70,10 +70,11 @@ int main(int argc,char** argv){
 	int* partition = NULL;
 	int* dbg = NULL;
 
+	unsigned seed = (unsigned)time(NULL);
+	fprintf(stderr,"%d\n",seed);
+	srand(seed);
+
 	if(type_ba){
-		unsigned seed = (unsigned)time(NULL);
-		fprintf(stderr,"%d\n",seed);
-		srand(seed);
 		BAnetwork ba(N);
 
 		int nnz = ba.xadj[N];
