@@ -23,6 +23,7 @@
 #define REFINE_EBFM 1
 #define REFINE_VFM 0
 #define REFINE_VFM2 1
+// VFM2 uses vwgt for balanceing, uses cewgt for obtaining smaller separator
 
 typedef struct ndOptions{
 	int ufactor; // allowed imbalance x/1000
@@ -68,6 +69,9 @@ public:
 		edgecut = 0;
 	};
 	PartGraph(int nvtxs,int* xadj,int* adjncy,int* vwgt,int* ewgt,int* cewgt,int* adjwgt){
+		SetGraph(nvtxs,xadj,adjncy,vwgt,ewgt,cewgt,adjwgt);
+	}
+	void SetGraph(int nvtxs,int* xadj,int* adjncy,int* vwgt,int* ewgt,int* cewgt,int* adjwgt){
 		this->nvtxs = nvtxs;
 		nedges = xadj[nvtxs];
 		this->xadj = (int*)malloc((nvtxs+1)*sizeof(int));

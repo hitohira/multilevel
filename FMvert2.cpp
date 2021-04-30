@@ -207,8 +207,8 @@ int FMDATAvert2::UpdatePartScoreAndGainVert(VGTri vg, WgtInfo* wgtInfo, PartGrap
 	int movedV = vg.v;
 	if(movedV == -1) return score;
 
-	assert(pg->GetVertGainCewgt(movedV,0,partition) == cell_gain[0][movedV]);
-	assert(pg->GetVertGainCewgt(movedV,1,partition) == cell_gain[1][movedV]);
+//	assert(pg->GetVertGainCewgt(movedV,0,partition) == cell_gain[0][movedV]);
+//	assert(pg->GetVertGainCewgt(movedV,1,partition) == cell_gain[1][movedV]);
 	
 
 	Trace trace; trace.v = movedV; trace.from = 2;

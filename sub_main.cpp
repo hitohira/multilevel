@@ -38,8 +38,8 @@ int main(int argc,char** argv){
 	int* dbg = new int[N];
 
 	for(int i = 0; i < N; i++){
-		vwgt[i] = 1;
-//		vwgt[i] = ba.xadj[i+1] - ba.xadj[i] + 1;
+//		vwgt[i] = 1;
+		vwgt[i] = ba.xadj[i+1] - ba.xadj[i] + 1;
 		cewgt[i] = 1;
 		adjwgt[i] = ba.xadj[i+1] - ba.xadj[i];
 		dbg[i] = ba.xadj[i+1] - ba.xadj[i] + 1;
@@ -72,7 +72,7 @@ int main(int argc,char** argv){
 	options.matchingScheme = MATCHING_CLUSTER;
 	options.ufactor = 5;
 	options.coarsenThreshold = 1000;
-//	options.refineScheme = REFINE_VFM2;
+	options.refineScheme = REFINE_VFM2;
 
 	double ratioX = 0.5;
 	if(0){	

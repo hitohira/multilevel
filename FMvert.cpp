@@ -5,7 +5,7 @@
 #include <set>
 
 #include "FM.h"
-#define FM_DEBUG
+//#define FM_DEBUG
 
 static double GetTime(){
 #ifdef FM_DEBUG
