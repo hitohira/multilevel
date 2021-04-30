@@ -1,7 +1,7 @@
 MAIN = edge_main
 VERT = vert_main
 SUB = sub_main
-EXPPL = exp_powerlaw
+EXPPL = powerlaw_exp
 OBJS = part.o load.o FM.o FMvert.o FMvert2.o clustermap.o ordering.o
 
 CXX = g++
@@ -25,4 +25,4 @@ $(EXPPL): $(EXPPL).o $(OBJS)
 	$(CXX) $(CXXFLAGS) -c $<
 
 clean:
-	rm -f *.o $(MAIN) $(VERT)
+	rm -f *.o $(MAIN) $(VERT) $(SUB) $(EXPPL)
