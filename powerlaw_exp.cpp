@@ -8,10 +8,11 @@
 
 int type_part_nnz = 1;
 int type_sep_nnz = 0;
-int type_ba = 0;
+int type_ba = 1;
 int type_powerlaw = 1;
 int N = 20000;
 double ratioX = 0.5;
+int rep_times = 10;
 
 void SetMyOptions(ndOptions* options){
 	SetDefaultOptions(options);
@@ -47,8 +48,8 @@ void SetMyOptions(ndOptions* options){
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/sym/F1/F1.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/sym/TEM152078/TEM152078.mtx";
 
-//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-Amazon/com-Amazon.mtx";
-const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-DBLP/com-DBLP.mtx";
+const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-Amazon/com-Amazon.mtx";
+//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-DBLP/com-DBLP.mtx";
 
 
 
@@ -57,7 +58,7 @@ void PrintData(int n, int* partition,int* array){
 	for(int i = 0; i < n; i++){
 		sm[partition[i]] += array[i];
 	}
-	int total = sm[0] + sm[1] + sm[2];
+	int total = sm[0] + sm[1] + 2*sm[2];
 	printf("%d %d %d %f %f\n",sm[0],sm[1],sm[2],1.0*(sm[0]+sm[2])/total,1.0*(sm[1]+sm[2])/total);
 }
 
@@ -70,9 +71,9 @@ int main(int argc,char** argv){
 	int* partition = NULL;
 	int* dbg = NULL;
 
-	unsigned seed = (unsigned)time(NULL);
-	fprintf(stderr,"%d\n",seed);
-	srand(seed);
+//	unsigned seed = (unsigned)time(NULL);
+//	fprintf(stderr,"%d\n",seed);
+//	srand(seed);
 
 	if(type_ba){
 		BAnetwork ba(N);
@@ -140,6 +141,10 @@ int main(int argc,char** argv){
 	ndOptions options;
 	SetMyOptions(&options);
 
+	int* data_nnz = new int[3*rep_times];
+	int* data_nvtxs = new int[3*rep_times];
+
+	// partitioning
 	if(0){
 		// TODO impl clustering version for partition2	
 		pg.Partition2(&options,ratioX,partition);	
@@ -150,14 +155,54 @@ int main(int argc,char** argv){
 		else printf("vert sep is wrong\n");
 	}
 	if(1){
-		pg.Partition3(&options,ratioX,partition);
-		PrintData(pg.Vsize(),partition,dbg);
-		PrintData(pg.Vsize(),partition,cewgt);
-		if(pg.VertSepIsOK(partition))
-			printf("%d\n",pg.GetVertSepSizeCewgt(partition));
-		else
-			printf("vert sep wrong\n");
+		for(int t = 0; t < rep_times; t++){
+			pg.Partition3(&options,ratioX,partition);
+//			PrintData(pg.Vsize(),partition,dbg);
+//			PrintData(pg.Vsize(),partition,cewgt);
+			int sm_nnz[3] = {0,0,0};
+			int sm_nvtxs[3] = {0,0,0};
+			for(int i = 0; i < pg.Vsize(); i++){
+				sm_nnz[partition[i]] += dbg[i];
+				sm_nvtxs[partition[i]] += cewgt[i];
+			}
+			data_nnz[t*3  ]   = sm_nnz[0];
+			data_nnz[t*3+1]   = sm_nnz[1];
+			data_nnz[t*3+2]   = sm_nnz[2];
+			data_nvtxs[t*3  ] = sm_nvtxs[0];
+			data_nvtxs[t*3+1] = sm_nvtxs[1];
+			data_nvtxs[t*3+2] = sm_nvtxs[2];
+
+			if(pg.VertSepIsOK(partition)){
+				fprintf(stderr,"%d\n",pg.GetVertSepSizeCewgt(partition));
+			}
+			else{
+				printf("vert sep wrong\n");
+				break;
+			}
+		}
 	}
+
+	// print data
+	printf("type_part_nnz,%d\n",type_part_nnz);
+	printf("type_sep_nnz,%d\n",type_sep_nnz);
+	printf("is_ba,%d\n",type_ba);
+	printf("is_powerlaw,%d\n",type_powerlaw);
+	printf("ratio,%f\n",ratioX);
+	if(type_ba){
+		printf("size,%d\n",N);
+	}
+	else{
+		printf("name,%s\n",filename);
+	}
+	printf("nnz[0],nnz[1],nnz[2],nvtxs[0],nvtxs[1],nvtxs[2]\n");
+	for(int t = 0; t < rep_times; t++){
+		int k = t*3;
+		printf("%d,%d,%d,%d,%d,%d\n",
+			data_nnz[k],data_nnz[k+1],data_nnz[k+2],data_nvtxs[k],data_nvtxs[k+1],data_nvtxs[k+2]);
+	}
+
+	delete[] data_nvtxs;
+	delete[] data_nnz;
 
 	delete[] vwgt;
 	delete[] ewgt;
