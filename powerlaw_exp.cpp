@@ -6,9 +6,9 @@
 #include "ordering.h"
 #include "load.h"
 
-int type_part_nnz = 1;
+int type_part_nnz = 0;
 int type_sep_nnz = 0;
-int type_ba = 1;
+int type_ba = 0;
 int type_powerlaw = 1;
 int N = 20000;
 double ratioX = 0.5;
