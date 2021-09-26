@@ -10,6 +10,7 @@
 #include <math.h>
 
 #include "load.h"
+#include "etree.h"
 
 class IVec{
 public:
@@ -101,5 +102,7 @@ int Rearrange(SparseMatrix& oldcsr, IVec& perm, SparseMatrix& newcsr);
 int SetPermFromPart(int nvtxs,int nparts, int* part, IVec& perm, IVec& partitionIdx);
 int ReorderForCPUGPU(SparseMatrix& csr, IVec& partitionIdx, IVec& perm, IVec& sepIdx);
 int PartitionSimple(SparseMatrix& csr, CVec& divRatio, IVec& partitionIdx);
+
+int GeneratePermFromEtree(int nvtxs, int* partition, Etree& etree, IVec& perm);
 
 #endif

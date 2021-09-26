@@ -231,3 +231,40 @@ int PartitionSimple(SparseMatrix& csr, CVec& divRatio, IVec& partitionIdx){
 	return 0;
 }
 
+int GeneratePermFromEtree(int nvtxs, int* partition, Etree& etree, IVec& perm){
+	perm.Alloc(nvtxs);
+	
+	int nblk = etree.NumNode();
+	std::vector<int> blk_data_cnt(nblk,0);
+	
+	// count size of each blk
+	for(int i = 0; i < nvtxs; i++){
+		blk_data_cnt[partition[i]]++;
+	}
+
+	std::vector<int> pre_order = etree.PreOrder();
+	std::vector<int> mapper(nblk);
+
+	for(int i = 0; i < nblk; i++){
+		mapper[pre_order[i]] = i;
+	}
+
+	std::vector<int> ofs(nblk);
+
+	// calc offset of each blk
+	ofs[0] = 0;
+	for(int i = 1; i < nblk; i++){
+		int b = pre_order[i-1];
+		int len = blk_data_cnt[b];
+		ofs[i] = ofs[i-1] + len;
+	}
+
+	// set perm
+	for(int i = 0; i < nvtxs; i++){
+		int p = partition[i];
+		int bidx = mapper[p];
+		perm.val[i] = ofs[bidx]++;
+	}
+
+	return 0;
+}

@@ -6,12 +6,12 @@
 #include "ordering.h"
 #include "load.h"
 
-int type_part_nnz = 0;
-int type_sep_nnz = 0;
-int type_ba = 0;
+int type_part_nnz = 1;
+int type_sep_nnz = 1;
+int type_ba = 1;
 int type_powerlaw = 1;
 int N = 20000;
-double ratioX = 0.5;
+double ratioX = 0.1;
 int rep_times = 10;
 
 void SetMyOptions(ndOptions* options){
@@ -48,10 +48,11 @@ void SetMyOptions(ndOptions* options){
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/sym/F1/F1.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/sym/TEM152078/TEM152078.mtx";
 
-const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-Amazon/com-Amazon.mtx";
+//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-Amazon/com-Amazon.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-DBLP/com-DBLP.mtx";
 
-
+const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/DIMACS10/coAuthorsCiteseer/coAuthorsCiteseer.mtx";
+//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/DIMACS10/m14b/m14b.mtx";
 
 void PrintData(int n, int* partition,int* array){
 	int sm[3] = {0,0,0};
@@ -76,7 +77,10 @@ int main(int argc,char** argv){
 //	srand(seed);
 
 	if(type_ba){
-		BAnetwork ba(N);
+//		BAnetwork ba(N);
+//		BAnetwork ba(N,10,3); // data2
+//		BAnetwork ba(N,10,10); // data3
+		BAnetwork ba(N,10,6); // data4
 
 		int nnz = ba.xadj[N];
 	

@@ -2,6 +2,7 @@
 #include <time.h>
 #include "part.h"
 #include "ordering.h"
+#include <math.h>
 
 void PrintData(int n, int* partition,int* array){
 	int sm[3] = {0,0,0};
@@ -12,17 +13,36 @@ void PrintData(int n, int* partition,int* array){
 	printf("%d %d %d %f %f\n",sm[0],sm[1],sm[2],1.0*(sm[0]+sm[2])/total,1.0*(sm[1]+sm[2])/total);
 }
 
+void dump_deg(PartGraph* pg){
+	double acc = 0.0;
+	double ave = 0.0;
+	for(int i = 0; i < pg->Vsize(); i++){
+		int deg = pg->Xadj(i+1) - pg->Xadj(i) + 1;
+		ave += deg;
+		acc += deg*deg;
+		printf("%d\n",deg);
+	}
+	ave /= pg->Vsize();
+	ave = ave*ave;
+	acc /= pg->Vsize();
+	fprintf(stderr,"%d\n",pg->Esize());
+	fprintf(stderr,"%f\n",sqrt(acc - ave));
+}
+
 int main(int argc,char** argv){
 	int N = 20000;
 //	int N = 500;
 	if(argc == 2){
 		N = atoi(argv[1]);
 	}
-	unsigned seed = (unsigned)time(NULL);
+//	unsigned seed = (unsigned)time(NULL);
 //	unsigned seed = 1617865892;
-	fprintf(stderr,"%d\n",seed);
-	srand(seed);
-	BAnetwork ba(N);
+//	fprintf(stderr,"%d\n",seed);
+//	srand(seed);
+//	BAnetwork ba(N);
+//	BAnetwork ba(N,10,3);
+//	BAnetwork ba(N,10,6);
+	BAnetwork ba(N,10,10);
 
 //	ba.DumpDegrees();
 //	ba.DumpGraph();
@@ -66,6 +86,9 @@ int main(int argc,char** argv){
 	
 
 	PartGraph pg(N,ba.xadj,ba.adjncy,vwgt,ewgt,cewgt,adjwgt);
+
+//	dump_deg(&pg);
+//	return 0;
 	
 	ndOptions options;
 	SetDefaultOptions(&options);

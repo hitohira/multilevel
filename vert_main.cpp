@@ -3,6 +3,8 @@
 #include <time.h>
 #include "part.h"
 #include "load.h"
+#include "ordering.h"
+#include <math.h>
 
 //const char* filename = "../centrality/matrix/bcsstk17/bcsstk17.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G3_circuit.mtx";
@@ -22,19 +24,25 @@
 
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-Youtube/com-Youtube.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-Amazon/com-Amazon.mtx";
-const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-DBLP/com-DBLP.mtx";
+//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-DBLP/com-DBLP.mtx";
 
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-LiveJournal/com-LiveJournal.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/hollywood-2009/hollywood-2009.mtx";
 
+const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/DIMACS10/coAuthorsCiteseer/coAuthorsCiteseer.mtx";
+//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/DIMACS10/m14b/m14b.mtx";
 
-const double ratioX = 0.5;
+
+const double ratioX = 0.3;
+
+
+void dump_deg(PartGraph*);
 
 int main(){
-	unsigned seed = (unsigned)time(NULL);
-	seed = 1610591357;
-	srand(seed);
-	fprintf(stderr,"seed %u\n",seed);
+//	unsigned seed = (unsigned)time(NULL);
+//	seed = 1610591357;
+//	srand(seed);
+//	fprintf(stderr,"seed %u\n",seed);
 
 
 	SparseMatrix csr(filename);	
@@ -72,10 +80,37 @@ int main(){
 	int* partition = (int*)malloc((nvtxs)*sizeof(int));
 
 	PartGraph pg(gd.nvtxs,gd.xadj,gd.adjncy,gd.vwgt,gd.ewgt,gd.cewgt,gd.adjwgt);
+	
+	if(0){
+		dump_deg(&pg);
+		return 0;
+	}
 
 	ndOptions options;
 	SetDefaultOptions(&options);
 	options.matchingScheme = MATCHING_CLUSTER;
+	options.ufactor = 5;
+	options.coarsenThreshold = 1000;
+	options.refineScheme = REFINE_VFM2;
+
+
+	Etree etree;
+	etree.Part(0);
+
+	if(1){
+		pg.Partition3(&options,ratioX,partition);
+		for(int i = 0; i < nvtxs; i++){
+			partition[i] = (partition[i]+1) % 3;
+		}
+		
+		SparseMatrix newcsr;
+		IVec perm;
+		GeneratePermFromEtree(nvtxs, partition,etree,perm);
+		Rearrange(csr,perm,newcsr);
+		newcsr.GenerateBitmap("mynd.bmp");
+		return 0;
+	}
+
 	
 	for(int i = 0; i < 100; i++)
 	{
@@ -98,4 +133,19 @@ int main(){
 	free(match);
 	free(map);
 	return 0;
+}
+
+void dump_deg(PartGraph* pg){
+	double acc = 0.0;
+	double ave = 0.0;
+	for(int i = 0; i < pg->Vsize(); i++){
+		int deg = pg->Xadj(i+1) - pg->Xadj(i) + 1;
+		ave += deg;
+		acc += deg*deg;
+		printf("%d\n",deg);
+	}
+	ave /= pg->Vsize();
+	ave = ave*ave;
+	acc /= pg->Vsize();
+	fprintf(stderr,"%f\n",sqrt(acc - ave));
 }
