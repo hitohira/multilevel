@@ -9,7 +9,7 @@
 #include "wgt.h"
 #include "FM.h"
 #include "clustermap.h"
-
+#include "etree.h"
 
 #define MATCHING_RM 0
 #define MATCHING_HEM 1
@@ -130,9 +130,14 @@ public:
 	int UpperVertGainCewgt();
 	int MaxVertexWeight();
 	void SetTolerance(ndOptions* options);
+	void Allocate(int nvtxs, int nedges);
 
 	void Show();
 	void Show(int* partition);
+
+	// Nested Dissection using etree
+	int NestedDissection(ndOptions* options, Etree& etree, int epos, int* partition);
+	int DivideGraphByPartition(int* partition, PartGraph& left, PartGraph& right);
 
 	// partition[nvtxs] // 0->X, 1->Y // ratioY = 1.0 - ratioX
 	int Partition2(ndOptions* options, double ratioX, int* partition); 

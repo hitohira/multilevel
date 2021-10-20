@@ -7,7 +7,7 @@
 #include <math.h>
 
 //const char* filename = "../centrality/matrix/bcsstk17/bcsstk17.mtx";
-//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G3_circuit.mtx";
+const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G3_circuit.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef2/crystm02/crystm02.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ecology2/ecology2.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef/bundle1/bundle1.mtx";
@@ -21,6 +21,8 @@
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/sym/F1/F1.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/sym/TEM152078/TEM152078.mtx";
 
+//small
+//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/can_62/can_62.mtx";
 
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-Youtube/com-Youtube.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-Amazon/com-Amazon.mtx";
@@ -29,11 +31,11 @@
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-LiveJournal/com-LiveJournal.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/hollywood-2009/hollywood-2009.mtx";
 
-const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/DIMACS10/coAuthorsCiteseer/coAuthorsCiteseer.mtx";
+//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/DIMACS10/coAuthorsCiteseer/coAuthorsCiteseer.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/DIMACS10/m14b/m14b.mtx";
 
 
-const double ratioX = 0.3;
+const double ratioX = 0.5;
 
 
 void dump_deg(PartGraph*);
@@ -45,9 +47,11 @@ int main(){
 //	fprintf(stderr,"seed %u\n",seed);
 
 
-	SparseMatrix csr(filename);	
+	SparseMatrix csr_origin(filename);	
+	SparseMatrix csr;
 	fprintf(stderr,"%s\n",filename);
 //	csr.Dump();
+	csr.Copy(csr_origin);
 	csr.RemoveDiagonal();
 //	csr.Dump();
 //	csr.GenerateBitmap("mat.bmp");
@@ -95,8 +99,14 @@ int main(){
 
 
 	Etree etree;
-	etree.Part(0);
 
+	if(0){
+		etree.ConstructFromFile("mynd_input.txt");
+		etree.Dump(0,0);
+		return 0;
+	}
+
+	etree.ConstructFromFile("mynd_input.txt");
 	if(1){
 		pg.Partition3(&options,ratioX,partition);
 		for(int i = 0; i < nvtxs; i++){
@@ -108,6 +118,10 @@ int main(){
 		GeneratePermFromEtree(nvtxs, partition,etree,perm);
 		Rearrange(csr,perm,newcsr);
 		newcsr.GenerateBitmap("mynd.bmp");
+
+		newcsr.GenerateFile("mynd_csr.txt");
+
+		etree.GenerateBlkInfo("mynd_blk.txt");
 		return 0;
 	}
 

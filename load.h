@@ -24,10 +24,13 @@ public:
 	~SparseMatrix();
 
 	void Reset();
+	void Copy(SparseMatrix& src);
 	void Copy(int m, int n, int* rowptr, int* colind, double* val);
 
 	void Dump();
 	void GenerateBitmap(const char* filename);
+
+	void GenerateFile(const char* filename);
 
 	void RemoveDiagonal();
 

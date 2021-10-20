@@ -787,6 +787,115 @@ int PartGraph::VertSepFromEdgeSep(int* partition){
 // main functions
 /////////////////
 
+int PartGraph::NestedDissection(ndOptions* options, Etree& etree, int epos, int* partition){
+	Enode enode = etree.Get(epos);
+	
+	if(enode.left == -1){
+		//TODO Cuthill McKee
+		return 0;
+	}
+	Enode eleft = etree.Get(enode.left);
+	//Enode eright = etree.Get(enode.right);
+
+	double ratioX = 1.0 * eleft.weight / enode.weight;
+	Partition3(options, ratioX, partition);
+
+	// divide Graph
+	PartGraph leftGraph, rightGraph;
+	DivideGraphByPartition(partition, leftGraph, rightGraph);
+
+	int* leftPartition = (int*)malloc(leftGraph.Vsize()*sizeof(int));
+	int* rightPartition = (int*)malloc(rightGraph.Vsize()*sizeof(int));
+	leftGraph.NestedDissection(options,etree,enode.left,leftPartition);
+	rightGraph.NestedDissection(options,etree,enode.right,rightPartition);
+
+	// merge result
+	//TODO
+
+	free(leftPartition);
+	free(rightPartition);
+	return 0;
+}
+
+int PartGraph::DivideGraphByPartition(int* partition, PartGraph& left, PartGraph& right){
+	left.DeleteGraph();
+	right.DeleteGraph();
+
+	// count and mapping
+	int lnv = 0, rnv = 0;
+	int lnnz = 0, rnnz = 0;
+	int* mapper = (int*)malloc(nvtxs*sizeof(int));
+	for(int i = 0; i < nvtxs; i++){
+		int nnz = xadj[i+1] - xadj[i];
+		if(partition[i] == 0){
+			mapper[i] = lnv++;
+			lnnz += nnz;
+		}
+		else if(partition[i] == 1){
+			mapper[i] = rnv++;
+			rnnz += nnz;
+		}
+		else{
+			mapper[i] = -1;
+		}
+	}
+	// alloc 
+	left.Allocate(lnv, lnnz);
+	right.Allocate(rnv, rnnz);
+
+	// set data 
+	int lvpos = 0, rvpos = 0;
+	int lnzpos = 0, rnzpos = 0;
+	left.xadj[lnv] = lnnz;
+	right.xadj[rnv] = rnnz;
+	left.totalvwgt = 0;
+	right.totalvwgt = 0;
+	for(int i = 0; i < nvtxs; i++){
+		if(partition[i] == 0){
+			left.xadj[lvpos] = lnzpos;
+			left.vwgt[lvpos] = vwgt[i];
+			left.totalvwgt += vwgt[i];
+			left.cewgt[lvpos] = cewgt[i];
+
+			left.adjwgt[lvpos] = 0;
+			for(int j = xadj[i]; j < xadj[i+1]; j++){
+				int u = adjncy[j];
+				// if adj vert is in the same partition
+				if(partition[u] == 0){
+					left.adjwgt[lvpos] += ewgt[j];
+					left.adjncy[lnzpos] = mapper[u];
+					left.ewgt[lnzpos] = ewgt[j];
+					lnzpos++;
+				}
+			}
+			lvpos++;
+		}
+		else if(partition[i] == 1){
+			right.xadj[rvpos] = rnzpos;
+			right.vwgt[rvpos] = vwgt[i];
+			right.totalvwgt += vwgt[i];
+			right.cewgt[rvpos] = cewgt[i];
+
+			right.adjwgt[rvpos] = 0;
+			for(int j = xadj[i]; j < xadj[i+1]; j++){
+				int u = adjncy[j];
+				// if adj vert is in the same partition
+				if(partition[u] == 1){
+					right.adjwgt[rvpos] += ewgt[j];
+					right.adjncy[rnzpos] = mapper[u];
+					right.ewgt[rnzpos] = ewgt[j];
+					rnzpos++;
+				}
+			}
+			rvpos++;
+		}
+	}
+
+	free(mapper);
+	return 0;
+}
+
+
 int PartGraph::Partition2(ndOptions* options, double ratioX, int* partition){
 	Partition2Inner(options,ratioX,partition);
 	RefineEdge(options,ratioX,partition);
@@ -997,6 +1106,18 @@ void PartGraph::SetTolerance(ndOptions* options){
 //	if(tolerance < mxw){
 //		 tolerance = mxw;
 //	}
+}
+
+void PartGraph::Allocate(int nvtxs, int nedges){
+	this->nvtxs = nvtxs;
+	this->nedges = nedges;
+	this->xadj = (int*)malloc((nvtxs+1)*sizeof(int));
+	this->adjncy = (int*)malloc(nedges*sizeof(int));
+	this->vwgt = (int*)malloc(nvtxs*sizeof(int));
+	this->ewgt = (int*)malloc(nedges*sizeof(int));
+	this->cewgt = (int*)malloc(nvtxs*sizeof(int));
+	this->adjwgt = (int*)malloc(nvtxs*sizeof(int));
+	tolerance = totalvwgt = currWgtX = edgecut = 0;
 }
 
 void PartGraph::Show(){

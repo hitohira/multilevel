@@ -21,6 +21,9 @@ SparseMatrix::SparseMatrix(int m, int n, int* rowptr, int* colind, double* val){
 	Copy(m,n,rowptr,colind,val);
 }
 
+void SparseMatrix::Copy(SparseMatrix& src){
+	Copy(src.m,src.n,src.rowptr,src.colind,src.val);
+}
 void SparseMatrix::Copy(int m, int n, int* rowptr, int* colind, double* val){
 	Reset();
 	this->m = m;
@@ -95,6 +98,29 @@ void SparseMatrix::GenerateBitmap(const char* filename){
 		}
 		bitmap.write(filename);
 	}
+}
+
+void SparseMatrix::GenerateFile(const char* filename){
+	FILE* fp = fopen(filename,"w");
+	
+	fprintf(fp,"%d %d\n", m, rowptr[m]);
+	
+	for(int i = 0; i < m; i++){
+		fprintf(fp,"%d ", rowptr[i]);
+	}
+	fprintf(fp,"\n");
+
+	for(int i = 0; i < rowptr[m]; i++){
+		fprintf(fp,"%d ", colind[i]);
+	}
+	fprintf(fp,"\n");
+
+	for(int i = 0; i < rowptr[m]; i++){
+		fprintf(fp,"%lf ", val[i]);
+	}
+	fprintf(fp,"\n");
+
+	fclose(fp);
 }
 
 void SparseMatrix::RemoveDiagonal(){

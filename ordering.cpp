@@ -249,15 +249,18 @@ int GeneratePermFromEtree(int nvtxs, int* partition, Etree& etree, IVec& perm){
 		mapper[pre_order[i]] = i;
 	}
 
-	std::vector<int> ofs(nblk);
+	std::vector<int> ofs(nblk+1);
 
 	// calc offset of each blk
 	ofs[0] = 0;
-	for(int i = 1; i < nblk; i++){
+	for(int i = 1; i <= nblk; i++){
 		int b = pre_order[i-1];
 		int len = blk_data_cnt[b];
 		ofs[i] = ofs[i-1] + len;
 	}
+
+	//set len ofs info to etree
+	etree.SetOfsLen(ofs);
 
 	// set perm
 	for(int i = 0; i < nvtxs; i++){
