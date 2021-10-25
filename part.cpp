@@ -789,11 +789,14 @@ int PartGraph::VertSepFromEdgeSep(int* partition){
 /////////////////
 
 int PartGraph::NestedDissection(ndOptions* options, Etree& etree, int epos, int* partition, int* perm){
+	fprintf(stderr,"nd node %d\n", epos);
 	Enode enode = etree.Get(epos);
 	
 	if(enode.left == -1){
 		for(int i = 0; i < nvtxs; i++) partition[i] = epos;
+		fprintf(stderr,"CM start %d\n", epos);
 		CuthillMcKee(perm);
+		fprintf(stderr,"CM end %d\n", epos);
 		return 0;
 	}
 	Enode eleft = etree.Get(enode.left);
@@ -957,16 +960,26 @@ int PartGraph::CuthillMcKee(int* perm){
 
 	for(int i = 0; i < nvtxs; i++){
 		int deg = xadj[i+1] - xadj[i];
-		noVisit.insert(std::make_pair(deg,i));
+		if(deg == 0){ // this is very important for speed up. why???
+			perm[i] = inc++;
+		}
+		else{
+			noVisit.insert(std::make_pair(deg,i));
+		}
 	}
 
+	long long perf_outer = 0;
+	long long perf_inner = 0;
+
 	while(!noVisit.empty()){
+		perf_outer++;
 		Pair firstPair = FindMinDegVertex(noVisit);
 		que.push(firstPair);
 		perm[firstPair.second] = -2;// -2 : added, -1 not added, 0-(m-1): processed
 		noVisit.erase(noVisit.begin());
 
 		while(!que.empty()){
+			perf_inner++;
 			Pair p = que.front(); que.pop();
 			int idx = p.second;
 			perm[idx] = inc++;
@@ -986,6 +999,7 @@ int PartGraph::CuthillMcKee(int* perm){
 			}
 		}
 	}
+	fprintf(stderr,"outer : %lld, inner : %lld\n",perf_outer, perf_inner);
 	return 0;
 }
 
