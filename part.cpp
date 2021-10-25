@@ -9,6 +9,7 @@
 #include <list>
 #include <iterator>
 #include <algorithm>
+#include <functional>
 #include <assert.h>
 
 #include "bipartite.h"
@@ -787,11 +788,12 @@ int PartGraph::VertSepFromEdgeSep(int* partition){
 // main functions
 /////////////////
 
-int PartGraph::NestedDissection(ndOptions* options, Etree& etree, int epos, int* partition){
+int PartGraph::NestedDissection(ndOptions* options, Etree& etree, int epos, int* partition, int* perm){
 	Enode enode = etree.Get(epos);
 	
 	if(enode.left == -1){
-		//TODO Cuthill McKee
+		for(int i = 0; i < nvtxs; i++) partition[i] = epos;
+		CuthillMcKee(perm);
 		return 0;
 	}
 	Enode eleft = etree.Get(enode.left);
@@ -802,22 +804,40 @@ int PartGraph::NestedDissection(ndOptions* options, Etree& etree, int epos, int*
 
 	// divide Graph
 	PartGraph leftGraph, rightGraph;
-	DivideGraphByPartition(partition, leftGraph, rightGraph);
+	int* leftMap = (int*)malloc(nvtxs*sizeof(int));
+	int* rightMap = (int*)malloc(nvtxs*sizeof(int));
+	DivideGraphByPartition(partition, leftGraph, leftMap, rightGraph, rightMap);
 
 	int* leftPartition = (int*)malloc(leftGraph.Vsize()*sizeof(int));
 	int* rightPartition = (int*)malloc(rightGraph.Vsize()*sizeof(int));
-	leftGraph.NestedDissection(options,etree,enode.left,leftPartition);
-	rightGraph.NestedDissection(options,etree,enode.right,rightPartition);
+	int* leftPerm = (int*)malloc(leftGraph.Vsize()*sizeof(int));
+	int* rightPerm = (int*)malloc(rightGraph.Vsize()*sizeof(int));
+	leftGraph.NestedDissection(options, etree, enode.left, leftPartition, leftPerm);
+	rightGraph.NestedDissection(options, etree, enode.right, rightPartition, rightPerm);
 
 	// merge result
-	//TODO
+	ndMergeInfo leftMi;
+	leftMi.size = leftGraph.Vsize();
+	leftMi.perm = leftPerm;
+	leftMi.partition = leftPartition;
+	leftMi.map = leftMap;
+	ndMergeInfo rightMi;
+	rightMi.size = rightGraph.Vsize();
+	rightMi.perm = rightPerm;
+	rightMi.partition = rightPartition;
+	rightMi.map = rightMap;
+	MergeInfo(epos, leftMi, rightMi, partition, perm);
 
+	free(leftMap);
+	free(rightMap);
 	free(leftPartition);
 	free(rightPartition);
+	free(leftPerm);
+	free(rightPerm);
 	return 0;
 }
 
-int PartGraph::DivideGraphByPartition(int* partition, PartGraph& left, PartGraph& right){
+int PartGraph::DivideGraphByPartition(int* partition, PartGraph& left, int* leftMap, PartGraph& right, int* rightMap){
 	left.DeleteGraph();
 	right.DeleteGraph();
 
@@ -828,11 +848,15 @@ int PartGraph::DivideGraphByPartition(int* partition, PartGraph& left, PartGraph
 	for(int i = 0; i < nvtxs; i++){
 		int nnz = xadj[i+1] - xadj[i];
 		if(partition[i] == 0){
-			mapper[i] = lnv++;
+			mapper[i] = lnv;
+			leftMap[lnv] = i;
+			lnv++;
 			lnnz += nnz;
 		}
 		else if(partition[i] == 1){
-			mapper[i] = rnv++;
+			mapper[i] = rnv;
+			rightMap[rnv] = i;
+			rnv++;
 			rnnz += nnz;
 		}
 		else{
@@ -895,6 +919,75 @@ int PartGraph::DivideGraphByPartition(int* partition, PartGraph& left, PartGraph
 	return 0;
 }
 
+// map : small -> large
+int PartGraph::MergeInfo(int epos, ndMergeInfo& left, ndMergeInfo& right, int* partition, int* perm){
+	int sepidx = 0;
+	for(int i = 0; i < nvtxs; i++){
+		if(partition[i] == 2){
+			partition[i] = epos;
+			perm[i] = sepidx++;
+		}
+	}
+
+	for(int i = 0; i < left.size; i++){
+		perm[left.map[i]] = left.perm[i];
+		partition[left.map[i]] = left.partition[i];
+	}
+	for(int i = 0; i < right.size; i++){
+		perm[right.map[i]] = right.perm[i];
+		partition[right.map[i]] = right.partition[i];
+	}
+	return 0;
+}
+
+typedef std::pair<int, int> Pair;
+
+static Pair FindMinDegVertex(std::set<Pair> noVisit){
+		return *(noVisit.begin());
+}
+
+int PartGraph::CuthillMcKee(int* perm){
+	for(int i = 0; i < nvtxs; i++){
+		perm[i] = -1;
+	}
+	int inc = 0;
+	std::set<Pair> noVisit;
+	std::queue<Pair> que;
+	std::vector<Pair> sortV;
+
+	for(int i = 0; i < nvtxs; i++){
+		int deg = xadj[i+1] - xadj[i];
+		noVisit.insert(std::make_pair(deg,i));
+	}
+
+	while(!noVisit.empty()){
+		Pair firstPair = FindMinDegVertex(noVisit);
+		que.push(firstPair);
+		perm[firstPair.second] = -2;// -2 : added, -1 not added, 0-(m-1): processed
+		noVisit.erase(noVisit.begin());
+
+		while(!que.empty()){
+			Pair p = que.front(); que.pop();
+			int idx = p.second;
+			perm[idx] = inc++;
+			std::vector<Pair>().swap(sortV);
+			for(int i = xadj[idx]; i < xadj[idx+1]; i++){
+				int col = adjncy[i];
+				if(perm[col] == -1){ // if not added to que yet
+					int deg = xadj[col+1] - xadj[col];
+					sortV.push_back(std::make_pair(deg,col));
+					perm[col] = -2;
+					noVisit.erase(std::make_pair(deg,col));
+				}
+			}
+			std::sort(sortV.begin(),sortV.end());
+			for(int i = 0; i < (int)sortV.size(); i++){
+				que.push(sortV[i]);
+			}
+		}
+	}
+	return 0;
+}
 
 int PartGraph::Partition2(ndOptions* options, double ratioX, int* partition){
 	Partition2Inner(options,ratioX,partition);

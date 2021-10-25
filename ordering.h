@@ -104,5 +104,6 @@ int ReorderForCPUGPU(SparseMatrix& csr, IVec& partitionIdx, IVec& perm, IVec& se
 int PartitionSimple(SparseMatrix& csr, CVec& divRatio, IVec& partitionIdx);
 
 int GeneratePermFromEtree(int nvtxs, int* partition, Etree& etree, IVec& perm);
+int GeneratePermFromEtreeCM(int nvtxs, int* partition, int* localPerm, Etree& etree, IVec& perm);
 
 #endif

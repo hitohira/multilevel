@@ -12,7 +12,7 @@
 typedef std::pair<int, int> Pair;
 
 
-Pair FindMinDegVertex(std::set<Pair> noVisit){
+static Pair FindMinDegVertex(std::set<Pair> noVisit){
 	return *(noVisit.begin());
 }
 
@@ -269,5 +269,46 @@ int GeneratePermFromEtree(int nvtxs, int* partition, Etree& etree, IVec& perm){
 		perm.val[i] = ofs[bidx]++;
 	}
 
+	return 0;
+}
+
+int GeneratePermFromEtreeCM(int nvtxs, int* partition, int* localPerm, Etree& etree, IVec& perm){
+	perm.Alloc(nvtxs);
+	
+	int nblk = etree.NumNode();
+	std::vector<int> blk_data_cnt(nblk,0);
+	
+	// count size of each blk
+	for(int i = 0; i < nvtxs; i++){
+		blk_data_cnt[partition[i]]++;
+	}
+
+	std::vector<int> pre_order = etree.PreOrder();
+	std::vector<int> mapper(nblk);
+
+	for(int i = 0; i < nblk; i++){
+		mapper[pre_order[i]] = i;
+	}
+
+	std::vector<int> ofs(nblk+1);
+
+	// calc offset of each blk
+	ofs[0] = 0;
+	for(int i = 1; i <= nblk; i++){
+		int b = pre_order[i-1];
+		int len = blk_data_cnt[b];
+		ofs[i] = ofs[i-1] + len;
+	}
+
+	//set len ofs info to etree
+	etree.SetOfsLen(ofs);
+
+	// set perm
+	for(int i = 0; i < nvtxs; i++){
+		int p = partition[i];
+		int lp = localPerm[i];
+		int bidx = mapper[p];
+		perm.val[i] = ofs[bidx] + lp;
+	}
 	return 0;
 }

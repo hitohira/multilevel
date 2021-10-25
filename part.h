@@ -35,6 +35,13 @@ typedef struct ndOptions{
 
 void SetDefaultOptions(ndOptions* options);
 
+typedef struct{
+	int size;
+	int* perm;
+	int* partition;
+	int* map;
+} ndMergeInfo;
+
 class PartGraph {
 private:
 	int nvtxs;
@@ -136,8 +143,10 @@ public:
 	void Show(int* partition);
 
 	// Nested Dissection using etree
-	int NestedDissection(ndOptions* options, Etree& etree, int epos, int* partition);
-	int DivideGraphByPartition(int* partition, PartGraph& left, PartGraph& right);
+	int NestedDissection(ndOptions* options, Etree& etree, int epos, int* partition, int* perm);
+	int DivideGraphByPartition(int* partition, PartGraph& left, int* leftMap, PartGraph& right, int* rightMap);
+	int MergeInfo(int epos, ndMergeInfo& left, ndMergeInfo& right, int* partition, int* perm);
+	int CuthillMcKee(int* perm);
 
 	// partition[nvtxs] // 0->X, 1->Y // ratioY = 1.0 - ratioX
 	int Partition2(ndOptions* options, double ratioX, int* partition); 

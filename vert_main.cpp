@@ -82,6 +82,7 @@ int main(){
 	int* map = (int*)malloc((nvtxs)*sizeof(int)); 
 	
 	int* partition = (int*)malloc((nvtxs)*sizeof(int));
+	int* local_perm = (int*)malloc(nvtxs*sizeof(int));
 
 	PartGraph pg(gd.nvtxs,gd.xadj,gd.adjncy,gd.vwgt,gd.ewgt,gd.cewgt,gd.adjwgt);
 	
@@ -99,23 +100,26 @@ int main(){
 
 
 	Etree etree;
+	etree.ConstructFromFile("mynd_input.txt");
 
 	if(0){
-		etree.ConstructFromFile("mynd_input.txt");
 		etree.Dump(0,0);
 		return 0;
 	}
 
-	etree.ConstructFromFile("mynd_input.txt");
 	if(1){
-		pg.Partition3(&options,ratioX,partition);
-		for(int i = 0; i < nvtxs; i++){
-			partition[i] = (partition[i]+1) % 3;
-		}
+		pg.NestedDissection(&options, etree, 0, partition, local_perm);
+//		pg.Partition3(&options,ratioX,partition);
+//		for(int i = 0; i < nvtxs; i++){
+//			partition[i] = (partition[i]+1) % 3;
+//		}
+		printf("nd fin\n");
 		
 		SparseMatrix newcsr;
 		IVec perm;
-		GeneratePermFromEtree(nvtxs, partition,etree,perm);
+		GeneratePermFromEtreeCM(nvtxs, partition, local_perm, etree,perm);
+//		GeneratePermFromEtree(nvtxs, partition,etree,perm);
+		printf("perm fin\n");
 		Rearrange(csr,perm,newcsr);
 		newcsr.GenerateBitmap("mynd.bmp");
 
@@ -136,6 +140,7 @@ int main(){
 			printf("vert sep wrong\n");
 	}
 
+	free(local_perm);
 	free(partition);
 
 	free(gd.xadj);
