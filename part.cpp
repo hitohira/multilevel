@@ -849,7 +849,12 @@ int PartGraph::DivideGraphByPartition(int* partition, PartGraph& left, int* left
 	int lnnz = 0, rnnz = 0;
 	int* mapper = (int*)malloc(nvtxs*sizeof(int));
 	for(int i = 0; i < nvtxs; i++){
-		int nnz = xadj[i+1] - xadj[i];
+		int nnz = 0;
+		for(int j = xadj[i]; j < xadj[i+1]; j++){
+			int col = adjncy[j];
+			if(partition[col] == partition[i]) nnz++;
+		}
+
 		if(partition[i] == 0){
 			mapper[i] = lnv;
 			leftMap[lnv] = i;
@@ -917,6 +922,10 @@ int PartGraph::DivideGraphByPartition(int* partition, PartGraph& left, int* left
 			rvpos++;
 		}
 	}
+	assert(lnv == lvpos);
+	assert(rnv == rvpos);
+	assert(lnnz == lnzpos);
+	assert(rnnz == rnzpos);
 
 	free(mapper);
 	return 0;
