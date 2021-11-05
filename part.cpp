@@ -927,6 +927,9 @@ int PartGraph::DivideGraphByPartition(int* partition, PartGraph& left, int* left
 	assert(lnnz == lnzpos);
 	assert(rnnz == rnzpos);
 
+	fprintf(stderr,"Nv  %d %d %d\n", nvtxs - lnv - rnv, lnv, rnv);
+	fprintf(stderr,"Nnz %d %d %d\n", xadj[nvtxs] - lnnz - rnnz, lnnz, rnnz);
+
 	free(mapper);
 	return 0;
 }

@@ -47,7 +47,7 @@ public:
 		return data[width * x + y];	
 	}
 	void reverse(){
-		for(int i = 0; i < width*height; i++){
+		for(int i = 0; i < (int)(width*height); i++){
 			data[i].r = UCHAR_MAX - data[i].r;
 			data[i].g = UCHAR_MAX - data[i].g;
 			data[i].b = UCHAR_MAX - data[i].b;
@@ -106,8 +106,8 @@ public:
 
 		line_data = new unsigned char[real_width];
 		
-		for(int i = 0; i < height; i++){
-			for(int j = 0; j < width; j++){
+		for(int i = 0; i < (int)height; i++){
+			for(int j = 0; j < (int)width; j++){
 				line_data[j*3]   = data[(height-i-1)*width + j].b;
 				line_data[j*3+1] = data[(height-i-1)*width + j].g;
 				line_data[j*3+2] = data[(height-i-1)*width + j].r;

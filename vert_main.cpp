@@ -7,7 +7,7 @@
 #include <math.h>
 
 //const char* filename = "../centrality/matrix/bcsstk17/bcsstk17.mtx";
-const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G3_circuit.mtx";
+//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G3_circuit.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef2/crystm02/crystm02.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ecology2/ecology2.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/posdef/bundle1/bundle1.mtx";
@@ -31,7 +31,7 @@ const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/G3_circuit/G
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/com-LiveJournal/com-LiveJournal.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/ScaleFree/hollywood-2009/hollywood-2009.mtx";
 
-//const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/DIMACS10/coAuthorsCiteseer/coAuthorsCiteseer.mtx";
+const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/DIMACS10/coAuthorsCiteseer/coAuthorsCiteseer.mtx";
 //const char* filename = "/mnt/d/DATA/Documents/IS/M1/Krylov/matrices/DIMACS10/m14b/m14b.mtx";
 
 
@@ -100,8 +100,8 @@ int main(){
 
 
 	Etree etree;
-	etree.ConstructFromFile("mynd_input2nd.txt");
-//	etree.ConstructFromFile("mynd_input.txt");
+//	etree.ConstructFromFile("mynd_input2nd.txt");
+	etree.ConstructFromFile("mynd_input.txt");
 	etree.Dump(0,0);
 
 
@@ -124,6 +124,8 @@ int main(){
 		newcsr.GenerateFile("mynd_csr.txt");
 
 		etree.GenerateBlkInfo("mynd_blk.txt");
+
+		newcsr.SubMatInfo(etree);
 		return 0;
 	}
 

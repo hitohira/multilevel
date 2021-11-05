@@ -163,6 +163,48 @@ void SparseMatrix::RemoveDiagonal(){
 	val = n_val;
 }
 
+void SparseMatrix::SubMatInfo(Etree& etree){
+	std::vector<int> preOrder = etree.PreOrder();
+	std::vector<int> ofs(preOrder.size());
+
+	for(int i = 0; i < (int)preOrder.size(); i++){
+		ofs[i] = etree.Get(preOrder[i]).ofs;
+	}
+	ofs.push_back(m);
+
+	std::vector<std::vector<int> > res(preOrder.size());
+	for(int i = 0; i < (int)preOrder.size(); i++) res[i] = std::vector<int>(preOrder.size(), 0);
+	
+	//count
+	int r_bidx = 0;
+	int r_next_ofs = ofs[r_bidx+1];
+	for(int i = 0; i < m; i++){
+		while(i >= r_next_ofs){
+			r_bidx++;
+			r_next_ofs = ofs[r_bidx+1];
+		}
+
+		for(int j = rowptr[i]; j < rowptr[i+1]; j++){
+			int c = colind[j];
+			std::vector<int>::iterator itr = std::lower_bound(ofs.begin(), ofs.end(), c);
+			int c_bidx = std::distance(ofs.begin(), itr) - (*itr == c ? 0 : 1);
+			res[r_bidx][c_bidx]++;
+		}
+	}
+
+	//print
+	printf("---submat info---\n");
+	for(int i = 0; i < (int)preOrder.size(); i++){
+		for(int j = 0; j < (int)preOrder.size(); j++){
+			printf("(%8d, %8d, %8d)\t", ofs[i+1]-ofs[i], ofs[j+1]-ofs[j], res[i][j]);
+		}
+		printf("\n");
+	}
+	printf("---submat info---\n");
+
+}
+
+
 void SparseMatrix::Get(GraphData* gd, bool vwgt_is_deg){
 	gd->nvtxs = m;
 
@@ -278,7 +320,7 @@ int SparseMatrix::Expand(){
 	}
 	bool both = false;
 	for(int i = 0; i < m; i++){
-		for(int j = 1; j < vlist[i].size(); j++){
+		for(int j = 1; j < (int)vlist[i].size(); j++){
 			if(vlist[i][j-1] == vlist[i][j]){
 				both = true;
 				break;
@@ -307,7 +349,7 @@ int SparseMatrix::Expand(){
 	rowptr[newM] = nnz;
 	for(int i = 0; i < newM; i++){
 		rowptr[i] = cntr;
-		for(int j = 0; j < vlist[i].size(); j++){
+		for(int j = 0; j < (int)vlist[i].size(); j++){
 			colind[cntr] = vlist[i][j].first;
 			val[cntr] = vlist[i][j].second;
 			cntr++;

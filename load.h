@@ -1,6 +1,8 @@
 #ifndef LOAD_H
 #define LOAD_H
 
+#include "etree.h"
+
 typedef struct {
 	int nvtxs;
 	int* xadj;
@@ -33,6 +35,8 @@ public:
 	void GenerateFile(const char* filename);
 
 	void RemoveDiagonal();
+
+	void SubMatInfo(Etree& etree);
 
 	int* xadj(){
 		return rowptr;
