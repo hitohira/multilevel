@@ -16,6 +16,7 @@ public:
 
 	// set when ordering
 	int ofs, len;
+	int order;
 
 	Enode();
 	Enode(const Enode& src){
@@ -27,6 +28,7 @@ public:
 		weight = src.weight;
 		ofs = src.ofs;
 		len = src.len;
+		order = src.order;
 	}
 	Enode& operator=(const Enode& src){
 		parent = src.parent;
@@ -37,6 +39,7 @@ public:
 		weight = src.weight;
 		ofs = src.ofs;
 		len = src.len;
+		order = src.order;
 		return (*this);
 	}
 };
@@ -49,7 +52,7 @@ class Etree {
 private:
 	std::vector<Enode> nodes;
 
-	int PreOrderSub(std::vector<int>& res, int pos);
+	int PreOrderSub(std::vector<int>& res, int pos, int num);
 	int SetOfsLenSub(std::vector<int>& blkptr, int step, int pos);
 	int GenerateBlkInfoSub(FILE* fp, int pos);
 	int setWeight(int wcpu, int wgpu, Pinfo* pinfo, int pos);

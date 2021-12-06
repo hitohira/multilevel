@@ -75,8 +75,9 @@ int main(){
 	gd.ewgt = (int*)malloc((csr.xadj()[nvtxs])*sizeof(int));
 	gd.cewgt = (int*)malloc((nvtxs)*sizeof(int));
 	gd.adjwgt = (int*)malloc((nvtxs)*sizeof(int));
-	csr.Get(&gd,false);
-//	csr.Get(&gd,true);
+	///!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//	csr.Get(&gd,false);
+	csr.Get(&gd,true);
 
 	int* match = (int*)malloc((nvtxs)*sizeof(int)); 
 	int* map = (int*)malloc((nvtxs)*sizeof(int)); 
@@ -100,8 +101,9 @@ int main(){
 
 
 	Etree etree;
+	etree.ConstructFromFile("mynd_input3rd.txt");
 //	etree.ConstructFromFile("mynd_input2nd.txt");
-	etree.ConstructFromFile("mynd_input.txt");
+//	etree.ConstructFromFile("mynd_input.txt");
 	etree.Dump(0,0);
 
 
@@ -118,7 +120,7 @@ int main(){
 		GeneratePermFromEtreeCM(nvtxs, partition, local_perm, etree,perm);
 //		GeneratePermFromEtree(nvtxs, partition,etree,perm);
 		printf("perm fin\n");
-		Rearrange(csr,perm,newcsr);
+		Rearrange(csr_origin,perm,newcsr);
 		newcsr.GenerateBitmap("mynd.bmp");
 
 		newcsr.GenerateFile("mynd_csr.txt");

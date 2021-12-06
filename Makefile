@@ -7,7 +7,7 @@ OBJS = part.o load.o FM.o FMvert.o FMvert2.o clustermap.o ordering.o etree.o
 CXX = g++
 CXXFLAGS = -O3 -Wall
 
-all: $(MAIN) $(VERT) $(SUB) $(EXPPL)
+all: $(VERT)
 
 $(MAIN): $(MAIN).o $(OBJS)
 	$(CXX) -o $@ $^

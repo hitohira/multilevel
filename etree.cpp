@@ -48,6 +48,7 @@ int Etree::ConstructFromFile(const char* file_name){
 	int pos = 0;
 	while(nowN != n_proc){
 		int res = Part(pos);
+		if(res == -1) fprintf(stderr,"pos=%d\n",pos);
 		assert(res != -1);
 		pos++;
 		nowN++;
@@ -134,9 +135,11 @@ int Etree::setWeight(int wcpu, int wgpu, Pinfo* pinfo, int pos){
 
 int Etree::Part(int x){
 	if(x < 0 || x >= NumNode()){
+		fprintf(stderr,"wrong x: %d / %d\n",x, NumNode());
 		return -1;
 	}
 	if(nodes[x].left != -1 || nodes[x].right != -1){
+		fprintf(stderr,"not leaf: l=%d r=%d\n",nodes[x].left, nodes[x].right);
 		return -1;
 	}
 	nodes[x].left = NumNode();
@@ -153,18 +156,19 @@ int Etree::Part(int x){
 std::vector<int> Etree::PreOrder(){
 	std::vector<int> res;
 	
-	PreOrderSub(res, 0);
+	PreOrderSub(res, 0, 0);
 
 	return res;
 }
 
-int Etree::PreOrderSub(std::vector<int>& res, int pos){
-	if(pos == -1) return 0;
+int Etree::PreOrderSub(std::vector<int>& res, int pos, int num){
+	if(pos == -1) return num;
 
 	res.push_back(pos);
+	nodes[pos].order = num++;
 	
-	PreOrderSub(res, nodes[pos].left);
-	return PreOrderSub(res, nodes[pos].right);
+	num = PreOrderSub(res, nodes[pos].left, num);
+	return PreOrderSub(res, nodes[pos].right, num);
 }
 
 int Etree::SetOfsLen(std::vector<int>& blkptr){
@@ -202,7 +206,10 @@ int Etree::GenerateBlkInfoSub(FILE* fp, int pos){
 
 	Enode en = nodes[pos];
 	int is_sep = en.left != -1 ? 1 : 0;
-	fprintf(fp, "%d %d %d %d %d %d\n",en.proc_id, en.unit_id, en.parent, en.ofs, en.len, is_sep);
+
+	std::vector<int> tmp = PreOrder();
+	int par = nodes[en.parent].order;
+	fprintf(fp, "%d %d %d %d %d %d\n",en.proc_id, en.unit_id, par, en.ofs, en.len, is_sep);
 
 	GenerateBlkInfoSub(fp, nodes[pos].left);
 	return GenerateBlkInfoSub(fp, nodes[pos].right);

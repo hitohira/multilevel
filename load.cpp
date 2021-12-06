@@ -195,8 +195,9 @@ void SparseMatrix::SubMatInfo(Etree& etree){
 	//print
 	printf("---submat info---\n");
 	for(int i = 0; i < (int)preOrder.size(); i++){
+		printf("%8d:: ",ofs[i+1] - ofs[i]);
 		for(int j = 0; j < (int)preOrder.size(); j++){
-			printf("(%8d, %8d, %8d)\t", ofs[i+1]-ofs[i], ofs[j+1]-ofs[j], res[i][j]);
+			printf("%8d ", res[i][j]);
 		}
 		printf("\n");
 	}
