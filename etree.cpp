@@ -208,7 +208,7 @@ int Etree::GenerateBlkInfoSub(FILE* fp, int pos){
 	int is_sep = en.left != -1 ? 1 : 0;
 
 	std::vector<int> tmp = PreOrder();
-	int par = nodes[en.parent].order;
+	int par = en.parent == -1 ? -1 : nodes[en.parent].order;
 	fprintf(fp, "%d %d %d %d %d %d\n",en.proc_id, en.unit_id, par, en.ofs, en.len, is_sep);
 
 	GenerateBlkInfoSub(fp, nodes[pos].left);
