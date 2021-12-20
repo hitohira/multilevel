@@ -139,10 +139,15 @@ static double CalcRatioNew(int v,int to, WgtInfo* wgtInfo, PartGraph* pg, int* p
 }
 static bool ConditionWgt(double ratioNow, double ratioNew, WgtInfo* wgtInfo){
 	double ratioX = wgtInfo->ratioX;
+/*
 	ratioX = ratioX / (1.0 - ratioX);
 	double tol = wgtInfo->tol / (1.0 - wgtInfo->ratioX);
 	double ratioL = ratioX - tol;
 	double ratioH = ratioX + tol;
+*/
+	double tol = wgtInfo->tol;
+	double ratioL = (ratioX - tol) / (1 - ratioX + tol);
+	double ratioH = (ratioX + tol) / (1 - ratioX - tol);
 	return (ratioL <= ratioNew && ratioNew <= ratioH) ||
 		(ratioNew < ratioL && ratioNow < ratioNew) ||
 		(ratioNew > ratioH && ratioNow > ratioNew);

@@ -101,7 +101,10 @@ int main(){
 
 
 	Etree etree;
-	etree.ConstructFromFile("mynd_input3rd.txt");
+	etree.ConstructFromFile("mynd_input6th.txt");
+//	etree.ConstructFromFile("mynd_input5th.txt");
+//	etree.ConstructFromFile("mynd_input4th.txt");
+//	etree.ConstructFromFile("mynd_input3rd.txt");
 //	etree.ConstructFromFile("mynd_input2nd.txt");
 //	etree.ConstructFromFile("mynd_input.txt");
 	etree.Dump(0,0);
